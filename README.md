@@ -1,1 +1,1 @@
-# Distributed_project
+# Distributed project
