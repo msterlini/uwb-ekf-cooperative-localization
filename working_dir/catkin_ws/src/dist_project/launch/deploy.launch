@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- SPAWN TAGS PARAMETERS DEFINITION -->
+  <param name="tag_height" type="int" value="3" />
+  <param name="tag_distance_rate" type="int" value="100" />
+  <param name="coordinate_file" type="str" value="$(find dist_project)/scripts/tag_coordinates.csv" />
+  <param name="tag_urdf_file" type="str" value="$(find dist_project)/urdf/tag.urdf" />
+
+  <node pkg="dist_project" type="spawn_tags.py" name="spawn_tags" />
+
+</launch>

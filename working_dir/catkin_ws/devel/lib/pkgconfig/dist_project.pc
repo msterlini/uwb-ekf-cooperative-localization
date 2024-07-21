@@ -1,0 +1,8 @@
+prefix=/home/marco/shared/working_dir/catkin_ws/devel
+
+Name: dist_project
+Description: Description of dist_project
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

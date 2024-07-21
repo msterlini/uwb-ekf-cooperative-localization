@@ -1,2 +1,2 @@
-
+dist_project
 -DCATKIN_DEVEL_PREFIX=/home/marco/shared/working_dir/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/marco/shared/working_dir/catkin_ws/install -G Unix Makefiles
