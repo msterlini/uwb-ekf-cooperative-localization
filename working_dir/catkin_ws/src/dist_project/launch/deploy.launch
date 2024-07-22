@@ -4,20 +4,25 @@
   <!-- SPAWN TAGS PARAMETERS DEFINITION -->
   <param name="tag_height" type="int" value="3" />
   <param name="tag_distance_rate" type="int" value="100" />
-  <param name="coordinate_file" type="str" value="$(find dist_project)/scripts/tag_coordinates.csv" />
+  <param name="tag_coordinate_file" type="str" value="$(find dist_project)/scripts/tag_coordinates.csv" />
   <param name="tag_urdf_file" type="str" value="$(find dist_project)/urdf/tag.urdf" />
 
   <!-- SPAWN TARGET PARAMETERS DEFINITION -->
-  <param name="target_x" type="int" value="0" />
-  <param name="target_y" type="int" value="0" />
+  <param name="target_coordinate_file" type="str" value="$(find dist_project)/scripts/target_coordinates.csv" />
   <param name="target_sdf_file" type="str" value="$(find dist_project)/models/target/model.sdf" />
 
   <!-- SPAWN ROOM PARAMETERS DEFINITION -->
   <param name="room_sdf_file" type="str" value="$(find dist_project)/models/room/model.sdf" />
 
+  <!-- ROBOTS PARAMETER DEFINITION-->
+  <arg name="model" default="$(find dist_project)/urdf/unicycle.urdf.xacro" />
+  <param name="robot_description" command="$(find xacro)/xacro $(arg model)" />
+  <param name="robot_coordinate_file" type="str" value="$(find dist_project)/scripts/robot_coordinates.csv" />
+
   <!-- INITIALIZE GAZEBO NODE -->
   <node pkg="gazebo_ros" type="gazebo" name="gazebo" />
 
-  <node pkg="dist_project" type="spawn_tags.py" name="spawn_tags" />
+
+  <node pkg="dist_project" type="gazebo_init.py" name="gazebo_init" />
 
 </launch>
