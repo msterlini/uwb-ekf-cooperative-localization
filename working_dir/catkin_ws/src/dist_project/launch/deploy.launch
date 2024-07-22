@@ -7,6 +7,17 @@
   <param name="coordinate_file" type="str" value="$(find dist_project)/scripts/tag_coordinates.csv" />
   <param name="tag_urdf_file" type="str" value="$(find dist_project)/urdf/tag.urdf" />
 
+  <!-- SPAWN TARGET PARAMETERS DEFINITION -->
+  <param name="target_x" type="int" value="0" />
+  <param name="target_y" type="int" value="0" />
+  <param name="target_sdf_file" type="str" value="$(find dist_project)/models/target/model.sdf" />
+
+  <!-- SPAWN ROOM PARAMETERS DEFINITION -->
+  <param name="room_sdf_file" type="str" value="$(find dist_project)/models/room/model.sdf" />
+
+  <!-- INITIALIZE GAZEBO NODE -->
+  <node pkg="gazebo_ros" type="gazebo" name="gazebo" />
+
   <node pkg="dist_project" type="spawn_tags.py" name="spawn_tags" />
 
 </launch>
