@@ -10,12 +10,11 @@ import tf2_ros
 # Tag parameters import
 z_height = rospy.get_param("tag_height")
 freq = rospy.get_param("tag_distance_rate")
-file_dir = rospy.get_param("coordinate_file")
+tag_file_dir = rospy.get_param("tag_coordinate_file")
 tag_urdf_file = rospy.get_param("tag_urdf_file")
 
 # Target parameters import
-target_x = rospy.get_param("target_x")
-target_y = rospy.get_param("target_y")
+target_file_dir = rospy.get_param("target_coordinate_file")
 target_sdf_file = rospy.get_param("target_sdf_file")
 
 # Room parameters import
@@ -46,7 +45,7 @@ def spawn_tag(x, y, id):
     except rospy.ServiceException as e:
         rospy.logerr("Tag initializer failed: %s", e)
 
-def spawn_target(x, y):
+def spawn_target(x, y, id):
     # Same logic as before but this time the model is a sdf file
     rospy.wait_for_service('/gazebo/spawn_sdf_model')
     try:
@@ -61,7 +60,7 @@ def spawn_target(x, y):
 
         spawn_model_client = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)
         spawn_model_client(
-        model_name="target",
+        model_name="target_" + id,
             model_xml=open(target_sdf_file, 'r').read(),
             initial_pose = pose,
             reference_frame = 'world'
@@ -114,24 +113,35 @@ def publish_static_transform(x, y, id):
 if __name__ == "__main__":
     
     # List to add the coordinates read from csv file
-    positions = []
-    with open(file_dir, 'r') as f:
+    tag_positions = []
+    with open(tag_file_dir, 'r') as f:
         csvreader = csv.reader(f) 
         for row in csvreader:
             # I cast to float each coordinate value
             row = [float(x) for x in row]
-            positions.append(row)
+            tag_positions.append(row)
+    
+    # List to add the targets' coordinates read from csv file
+    target_positions = []
+    with open(target_file_dir, 'r') as f:
+        csvreader = csv.reader(f) 
+        for row in csvreader:
+            # I cast to float each coordinate value
+            row = [float(x) for x in row]
+            target_positions.append(row)
 
     # Initialization of the node
     rospy.init_node("tag_target_spawn_node")
 
     # Gazebo tag spawn
-    for i, pos in enumerate(positions):
+    for i, pos in enumerate(tag_positions):
         # I call the function for each line (tag)
         spawn_tag(pos[0], pos[1], str(i))
 
     # Gazebo target spawn
-    spawn_target(target_x, target_y)
+    for i, pos in enumerate(target_positions):
+        # I call the function for each line (tag)
+        spawn_target(pos[0], pos[1], str(i))
 
     # Gazebo room spawn
     spawn_room()
@@ -141,7 +151,7 @@ if __name__ == "__main__":
 
     rate = rospy.Rate(freq)
     while not rospy.is_shutdown():
-        for i, pos in enumerate(positions):
+        for i, pos in enumerate(tag_positions):
             publish_static_transform(pos[0], pos[1], str(i))
         rate.sleep()
 

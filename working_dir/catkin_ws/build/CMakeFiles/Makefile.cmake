@@ -18,7 +18,7 @@ set(CMAKE_MAKEFILE_DEPENDS
   "/home/marco/shared/working_dir/catkin_ws/src/CMakeLists.txt"
   "/home/marco/shared/working_dir/catkin_ws/src/dist_project/CMakeLists.txt"
   "/home/marco/shared/working_dir/catkin_ws/src/dist_project/package.xml"
-  "/home/marco/shared/working_dir/catkin_ws/src/dist_project/scripts/spawn_tags.py"
+  "/home/marco/shared/working_dir/catkin_ws/src/dist_project/scripts/gazebo_init.py"
   "/opt/ros/noetic/share/catkin/cmake/all.cmake"
   "/opt/ros/noetic/share/catkin/cmake/assert.cmake"
   "/opt/ros/noetic/share/catkin/cmake/atomic_configure_file.cmake"
