@@ -24,19 +24,19 @@ struct uwb_data_
   typedef uwb_data_<ContainerAllocator> Type;
 
   uwb_data_()
-    : destination_id()
+    : tag_id()
     , distance()  {
     }
   uwb_data_(const ContainerAllocator& _alloc)
-    : destination_id(_alloc)
+    : tag_id(_alloc)
     , distance(_alloc)  {
   (void)_alloc;
     }
 
 
 
-   typedef std::vector<int64_t, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<int64_t>> _destination_id_type;
-  _destination_id_type destination_id;
+   typedef std::vector<int64_t, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<int64_t>> _tag_id_type;
+  _tag_id_type tag_id;
 
    typedef std::vector<double, typename std::allocator_traits<ContainerAllocator>::template rebind_alloc<double>> _distance_type;
   _distance_type distance;
@@ -70,7 +70,7 @@ return s;
 template<typename ContainerAllocator1, typename ContainerAllocator2>
 bool operator==(const ::dist_project::uwb_data_<ContainerAllocator1> & lhs, const ::dist_project::uwb_data_<ContainerAllocator2> & rhs)
 {
-  return lhs.destination_id == rhs.destination_id &&
+  return lhs.tag_id == rhs.tag_id &&
     lhs.distance == rhs.distance;
 }
 
@@ -128,12 +128,12 @@ struct MD5Sum< ::dist_project::uwb_data_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "f96d6cbe0eaf6e7544b86045e6091f3e";
+    return "17e78c3780628319859d2345ed3e02ce";
   }
 
   static const char* value(const ::dist_project::uwb_data_<ContainerAllocator>&) { return value(); }
-  static const uint64_t static_value1 = 0xf96d6cbe0eaf6e75ULL;
-  static const uint64_t static_value2 = 0x44b86045e6091f3eULL;
+  static const uint64_t static_value1 = 0x17e78c3780628319ULL;
+  static const uint64_t static_value2 = 0x859d2345ed3e02ceULL;
 };
 
 template<class ContainerAllocator>
@@ -152,7 +152,7 @@ struct Definition< ::dist_project::uwb_data_<ContainerAllocator> >
 {
   static const char* value()
   {
-    return "int64[] destination_id\n"
+    return "int64[] tag_id\n"
 "float64[] distance\n"
 ;
   }
@@ -172,7 +172,7 @@ namespace serialization
   {
     template<typename Stream, typename T> inline static void allInOne(Stream& stream, T m)
     {
-      stream.next(m.destination_id);
+      stream.next(m.tag_id);
       stream.next(m.distance);
     }
 
@@ -192,11 +192,11 @@ struct Printer< ::dist_project::uwb_data_<ContainerAllocator> >
 {
   template<typename Stream> static void stream(Stream& s, const std::string& indent, const ::dist_project::uwb_data_<ContainerAllocator>& v)
   {
-    s << indent << "destination_id[]" << std::endl;
-    for (size_t i = 0; i < v.destination_id.size(); ++i)
+    s << indent << "tag_id[]" << std::endl;
+    for (size_t i = 0; i < v.tag_id.size(); ++i)
     {
-      s << indent << "  destination_id[" << i << "]: ";
-      Printer<int64_t>::stream(s, indent + "  ", v.destination_id[i]);
+      s << indent << "  tag_id[" << i << "]: ";
+      Printer<int64_t>::stream(s, indent + "  ", v.tag_id[i]);
     }
     s << indent << "distance[]" << std::endl;
     for (size_t i = 0; i < v.distance.size(); ++i)

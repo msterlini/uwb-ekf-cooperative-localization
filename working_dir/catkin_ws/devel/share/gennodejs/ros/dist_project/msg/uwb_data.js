@@ -18,15 +18,15 @@ class uwb_data {
   constructor(initObj={}) {
     if (initObj === null) {
       // initObj === null is a special case for deserialization where we don't initialize fields
-      this.destination_id = null;
+      this.tag_id = null;
       this.distance = null;
     }
     else {
-      if (initObj.hasOwnProperty('destination_id')) {
-        this.destination_id = initObj.destination_id
+      if (initObj.hasOwnProperty('tag_id')) {
+        this.tag_id = initObj.tag_id
       }
       else {
-        this.destination_id = [];
+        this.tag_id = [];
       }
       if (initObj.hasOwnProperty('distance')) {
         this.distance = initObj.distance
@@ -39,8 +39,8 @@ class uwb_data {
 
   static serialize(obj, buffer, bufferOffset) {
     // Serializes a message object of type uwb_data
-    // Serialize message field [destination_id]
-    bufferOffset = _arraySerializer.int64(obj.destination_id, buffer, bufferOffset, null);
+    // Serialize message field [tag_id]
+    bufferOffset = _arraySerializer.int64(obj.tag_id, buffer, bufferOffset, null);
     // Serialize message field [distance]
     bufferOffset = _arraySerializer.float64(obj.distance, buffer, bufferOffset, null);
     return bufferOffset;
@@ -50,8 +50,8 @@ class uwb_data {
     //deserializes a message object of type uwb_data
     let len;
     let data = new uwb_data(null);
-    // Deserialize message field [destination_id]
-    data.destination_id = _arrayDeserializer.int64(buffer, bufferOffset, null)
+    // Deserialize message field [tag_id]
+    data.tag_id = _arrayDeserializer.int64(buffer, bufferOffset, null)
     // Deserialize message field [distance]
     data.distance = _arrayDeserializer.float64(buffer, bufferOffset, null)
     return data;
@@ -59,7 +59,7 @@ class uwb_data {
 
   static getMessageSize(object) {
     let length = 0;
-    length += 8 * object.destination_id.length;
+    length += 8 * object.tag_id.length;
     length += 8 * object.distance.length;
     return length + 8;
   }
@@ -71,13 +71,13 @@ class uwb_data {
 
   static md5sum() {
     //Returns md5sum for a message object
-    return 'f96d6cbe0eaf6e7544b86045e6091f3e';
+    return '17e78c3780628319859d2345ed3e02ce';
   }
 
   static messageDefinition() {
     // Returns full string definition for message
     return `
-    int64[] destination_id
+    int64[] tag_id
     float64[] distance
     `;
   }
@@ -88,11 +88,11 @@ class uwb_data {
       msg = {};
     }
     const resolved = new uwb_data(null);
-    if (msg.destination_id !== undefined) {
-      resolved.destination_id = msg.destination_id;
+    if (msg.tag_id !== undefined) {
+      resolved.tag_id = msg.tag_id;
     }
     else {
-      resolved.destination_id = []
+      resolved.tag_id = []
     }
 
     if (msg.distance !== undefined) {
