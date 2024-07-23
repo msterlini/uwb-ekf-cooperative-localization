@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <launch>
 
+  <!-- PARAMETER SECTION -->
+  <!--==================================================================-->
   <!-- SPAWN TAGS PARAMETERS DEFINITION -->
   <param name="tag_height" type="int" value="3" />
   <param name="tag_distance_rate" type="int" value="100" />
@@ -21,6 +23,12 @@
 
   <!-- UWB DISTANCE SIMULATOR NODE PARAMETERS -->
   <param name="initialization_time" type="int" value="5" />
+
+  <!-- MOTION PLANNER NODE PARAMETERS -->
+  <param name="motion_planner_rate" type="int" value="1" />
+
+  <!-- NODES SECTION -->
+  <!--==================================================================-->
 
   <!-- INITIALIZE GAZEBO NODE -->
   <node pkg="gazebo_ros" type="gazebo" name="gazebo" />
