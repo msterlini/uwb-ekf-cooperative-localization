@@ -10,6 +10,7 @@ project(dist_project)
 find_package(catkin REQUIRED COMPONENTS
  rospy
  std_msgs
+ message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -46,11 +47,11 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   uwb_data.msg
-#   robot_data.msg
-# )
+add_message_files(
+  FILES
+  uwb_data.msg
+  robot_data.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -67,10 +68,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -160,6 +161,7 @@ include_directories(
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
   scripts/gazebo_init.py
+  scripts/uwb_distances.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

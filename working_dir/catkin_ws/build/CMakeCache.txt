@@ -430,6 +430,12 @@ gazebosensorplugins_SOURCE_DIR:STATIC=/home/marco/shared/working_dir/catkin_ws/s
 //The directory containing a CMake configuration file for gencpp.
 gencpp_DIR:PATH=/opt/ros/noetic/share/gencpp/cmake
 
+//The directory containing a CMake configuration file for generate_message.
+generate_message_DIR:PATH=generate_message_DIR-NOTFOUND
+
+//The directory containing a CMake configuration file for generate_messages.
+generate_messages_DIR:PATH=generate_messages_DIR-NOTFOUND
+
 //The directory containing a CMake configuration file for geneus.
 geneus_DIR:PATH=/opt/ros/noetic/share/geneus/cmake
 

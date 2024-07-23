@@ -4,6 +4,7 @@ import geometry_msgs.msg
 from geometry_msgs.msg import Pose
 import csv
 import tf2_ros
+import roslaunch
 
 # Import parameters defined in deploy.launch
 
@@ -19,6 +20,10 @@ target_sdf_file = rospy.get_param("target_sdf_file")
 
 # Room parameters import
 room_sdf_file = rospy.get_param("room_sdf_file")
+
+# Unicycle parameters import
+robot_file_dir = rospy.get_param("robot_coordinate_file")
+robot_description = rospy.get_param("robot_description")
 
 def spawn_tag(x, y, id):
     # I use the service given by gazebo package spawn_urdf_model to dynamically spawn the tags at startup
@@ -67,6 +72,43 @@ def spawn_target(x, y, id):
         )
     except rospy.ServiceException as e:
         rospy.logerr("Target initializer failed: %s", e)
+
+def spawn_robot(x, y, id):
+    # Same logic as before with some twist
+    rospy.wait_for_service('/gazebo/spawn_urdf_model')
+    try:
+        pose = Pose()
+        pose.position.x = x
+        pose.position.y = y
+        pose.position.z = 1
+        pose.orientation.x = 0
+        pose.orientation.y = 0
+        pose.orientation.z = 0
+        pose.orientation.w = 0
+
+        spawn_unicycle = rospy.ServiceProxy('/gazebo/spawn_urdf_model', SpawnModel)
+        spawn_unicycle("robot_" + id,
+            robot_description, 
+            "/robot" + id,
+            pose,
+            "world"
+        )
+
+        package = 'dist_project'
+        executable = 'uwb_distances.py'
+        namespace = '/robot' + id
+        node = roslaunch.core.Node(package=package, executable=executable, namespace=namespace)
+
+        launch = roslaunch.scriptapi.ROSLaunch()
+        launch.start()    
+
+        process = launch.launch(node)
+        print(process.is_alive())
+        process.stop()
+
+
+    except rospy.ServiceException as e:
+        rospy.logerr("Robot " + id + " initializer failed: %s", e)
 
 def spawn_room():
     # Same logic as before but simplier
@@ -130,8 +172,22 @@ if __name__ == "__main__":
             row = [float(x) for x in row]
             target_positions.append(row)
 
+    # List to add the robots' initial coordinates read from csv file
+    robot_positions = []
+    with open(robot_file_dir, 'r') as f:
+        csvreader = csv.reader(f) 
+        for row in csvreader:
+            # I cast to float each coordinate value
+            row = [float(x) for x in row]
+            robot_positions.append(row)
+
+    print(robot_positions)
+
     # Initialization of the node
     rospy.init_node("tag_target_spawn_node")
+
+    # Gazebo room spawn
+    spawn_room()
 
     # Gazebo tag spawn
     for i, pos in enumerate(tag_positions):
@@ -143,8 +199,9 @@ if __name__ == "__main__":
         # I call the function for each line (tag)
         spawn_target(pos[0], pos[1], str(i))
 
-    # Gazebo room spawn
-    spawn_room()
+    for i, pos in enumerate(robot_positions):
+        # I call the function for each line (tag)
+        spawn_robot(pos[0], pos[1], str(i))
 
     # Tf publishing 
     broadcaster = tf2_ros.StaticTransformBroadcaster()
