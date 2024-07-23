@@ -1,9 +1,12 @@
+import roslaunch.parent
+import roslaunch.rlutil
 import rospy
 from gazebo_msgs.srv import SpawnModel
 import geometry_msgs.msg
 from geometry_msgs.msg import Pose
 import csv
 import tf2_ros
+import roslaunch
 
 # Import parameters defined in deploy.launch
 
@@ -86,12 +89,14 @@ def spawn_robot(x, y, id):
         pose.orientation.w = 0
 
         spawn_unicycle = rospy.ServiceProxy('/gazebo/spawn_urdf_model', SpawnModel)
+        # The arguments required are the name of the robot, the parsed robot description from the URDF file, the namespace definition, the initial pose and the parent reference frame
         spawn_unicycle("robot_" + id,
             robot_description, 
             "/robot" + id,
             pose,
             "world"
         )
+
     except rospy.ServiceException as e:
         rospy.logerr("Robot " + id + " initializer failed: %s", e)
 
@@ -139,7 +144,7 @@ def publish_static_transform(x, y, id):
 
 if __name__ == "__main__":
     
-    # List to add the coordinates read from csv file
+    # List to add the tags' coordinates read from csv file
     tag_positions = []
     with open(tag_file_dir, 'r') as f:
         csvreader = csv.reader(f) 
@@ -166,10 +171,8 @@ if __name__ == "__main__":
             row = [float(x) for x in row]
             robot_positions.append(row)
 
-    print(robot_positions)
-
     # Initialization of the node
-    rospy.init_node("tag_target_spawn_node")
+    rospy.init_node("gazebo_initializer_node")
 
     # Gazebo room spawn
     spawn_room()
@@ -181,19 +184,32 @@ if __name__ == "__main__":
 
     # Gazebo target spawn
     for i, pos in enumerate(target_positions):
-        # I call the function for each line (tag)
+        # I call the function for each line (target)
         spawn_target(pos[0], pos[1], str(i))
 
     for i, pos in enumerate(robot_positions):
-        # I call the function for each line (tag)
+        # I call the function for each line (robot)
         spawn_robot(pos[0], pos[1], str(i))
 
     # Tf publishing 
     broadcaster = tf2_ros.StaticTransformBroadcaster()
 
+    # The next piece of code is used to recursively launch a launch file that initialize all the nodes with respect to each robot. 
+    # I run it here directly so to create the correct and dynamic number of nodes and namespace with respect to the number of robots in the csv file\
+    uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+    roslaunch.configure_logging(uuid)
+
+    # I specify the path of the new launch file and the argument corresponding to the total number of robots
+    launch_argument = ['/home/marco/shared/working_dir/catkin_ws/src/dist_project/launch/start_nodes.launch', 'ns:=' + str(len(robot_positions) - 1)]
+    roslaunch_args = launch_argument[1:]
+    roslaunch_file = [(roslaunch.rlutil.resolve_launch_arguments(launch_argument)[0], roslaunch_args)]
+    launch = roslaunch.parent.ROSLaunchParent(uuid, roslaunch_file)
+    launch.start()
+
+    # I declare the frequency of the publishing of the tags' position
     rate = rospy.Rate(freq)
     while not rospy.is_shutdown():
         for i, pos in enumerate(tag_positions):
+            # I continuosly publish the static positions of the tags
             publish_static_transform(pos[0], pos[1], str(i))
         rate.sleep()
-

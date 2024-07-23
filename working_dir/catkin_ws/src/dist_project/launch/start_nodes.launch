@@ -1,0 +1,19 @@
+<!-- RECURSIVE LAUNCH FILE TO INITIALIZE ALL THE NODES IN THE CORRECT NAMESPACE -->
+
+<launch>
+
+    <!-- ARGUMENT VALUE HOLDING THE TOTAL NUMBER OF ROBOTS, IT WILL BE PASSED FROM THE PYTHON SCRIPT -->
+    <arg name="ns" default="1" />
+    
+    <!-- I CREATE THE FIRST NAMESPACE STARTING FROM THE LAST ROBOT -->
+    <group ns="$(eval 'robot' + str(arg('ns')))">
+        <!-- HERE WILL BE STARTED ALL THE NECESSARY NODES FOR EACH ROBOT -->
+        <node name="uwb_dist" pkg="dist_project" type="uwb_distances.py" />
+    </group>
+
+    <!-- HERE LIES THE RECURSIVE LOGIC OF THE LAUNCH FILE THAT CONTINUOSLY LAUNCHES ITSELF UNTIL THE NAMESPACE NUMBER REACH 0 (THE FIRST ROBOT) -->
+    <include file="$(find dist_project)/launch/start_nodes.launch" if="$(eval arg('ns') - 1 >= 0)">
+        <arg name="ns" value="$(eval arg('ns') - 1)" />
+    </include>
+
+</launch>
