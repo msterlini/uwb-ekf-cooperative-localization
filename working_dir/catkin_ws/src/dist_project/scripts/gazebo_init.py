@@ -6,6 +6,7 @@ import geometry_msgs.msg
 from geometry_msgs.msg import Pose
 import csv
 import tf2_ros
+import time
 import roslaunch
 
 # Import parameters defined in deploy.launch
@@ -26,6 +27,9 @@ room_sdf_file = rospy.get_param("room_sdf_file")
 # Unicycle parameters import
 robot_file_dir = rospy.get_param("robot_coordinate_file")
 robot_description = rospy.get_param("robot_description")
+
+# General parameters import
+init_time = rospy.get_param("/initialization_time")
 
 def spawn_tag(x, y, id):
     # I use the service given by gazebo package spawn_urdf_model to dynamically spawn the tags at startup
@@ -193,6 +197,8 @@ if __name__ == "__main__":
 
     # Tf publishing 
     broadcaster = tf2_ros.StaticTransformBroadcaster()
+
+    time.sleep(init_time)
 
     # The next piece of code is used to recursively launch a launch file that initialize all the nodes with respect to each robot. 
     # I run it here directly so to create the correct and dynamic number of nodes and namespace with respect to the number of robots in the csv file\

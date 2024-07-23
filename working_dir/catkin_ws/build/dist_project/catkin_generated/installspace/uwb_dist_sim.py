@@ -5,9 +5,6 @@ import time
 from nav_msgs.msg import Odometry
 import numpy as np
 
-# Parameters import
-init_time = rospy.get_param("/initialization_time")
-
 # Class creation
 class UwbSimulation:
 
@@ -114,9 +111,6 @@ class UwbSimulation:
 
 if __name__ == "__main__":
     
-    # Initialization time interval to wait for gazebo init
-    time.sleep(init_time)
-
     # Initialize simulator class
     sim = UwbSimulation()
 
