@@ -1,2 +1,2 @@
-int64[] destination_id
+int64[] tag_id
 float64[] distance

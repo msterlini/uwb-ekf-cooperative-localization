@@ -1,6 +1,6 @@
 (cl:in-package dist_project-msg)
-(cl:export '(DESTINATION_ID-VAL
-          DESTINATION_ID
+(cl:export '(TAG_ID-VAL
+          TAG_ID
           DISTANCE-VAL
           DISTANCE
 ))

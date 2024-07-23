@@ -7,9 +7,9 @@
 ;//! \htmlinclude uwb_data.msg.html
 
 (cl:defclass <uwb_data> (roslisp-msg-protocol:ros-message)
-  ((destination_id
-    :reader destination_id
-    :initarg :destination_id
+  ((tag_id
+    :reader tag_id
+    :initarg :tag_id
     :type (cl:vector cl:integer)
    :initform (cl:make-array 0 :element-type 'cl:integer :initial-element 0))
    (distance
@@ -27,10 +27,10 @@
   (cl:unless (cl:typep m 'uwb_data)
     (roslisp-msg-protocol:msg-deprecation-warning "using old message class name dist_project-msg:<uwb_data> is deprecated: use dist_project-msg:uwb_data instead.")))
 
-(cl:ensure-generic-function 'destination_id-val :lambda-list '(m))
-(cl:defmethod destination_id-val ((m <uwb_data>))
-  (roslisp-msg-protocol:msg-deprecation-warning "Using old-style slot reader dist_project-msg:destination_id-val is deprecated.  Use dist_project-msg:destination_id instead.")
-  (destination_id m))
+(cl:ensure-generic-function 'tag_id-val :lambda-list '(m))
+(cl:defmethod tag_id-val ((m <uwb_data>))
+  (roslisp-msg-protocol:msg-deprecation-warning "Using old-style slot reader dist_project-msg:tag_id-val is deprecated.  Use dist_project-msg:tag_id instead.")
+  (tag_id m))
 
 (cl:ensure-generic-function 'distance-val :lambda-list '(m))
 (cl:defmethod distance-val ((m <uwb_data>))
@@ -38,7 +38,7 @@
   (distance m))
 (cl:defmethod roslisp-msg-protocol:serialize ((msg <uwb_data>) ostream)
   "Serializes a message object of type '<uwb_data>"
-  (cl:let ((__ros_arr_len (cl:length (cl:slot-value msg 'destination_id))))
+  (cl:let ((__ros_arr_len (cl:length (cl:slot-value msg 'tag_id))))
     (cl:write-byte (cl:ldb (cl:byte 8 0) __ros_arr_len) ostream)
     (cl:write-byte (cl:ldb (cl:byte 8 8) __ros_arr_len) ostream)
     (cl:write-byte (cl:ldb (cl:byte 8 16) __ros_arr_len) ostream)
@@ -53,7 +53,7 @@
     (cl:write-byte (cl:ldb (cl:byte 8 48) unsigned) ostream)
     (cl:write-byte (cl:ldb (cl:byte 8 56) unsigned) ostream)
     ))
-   (cl:slot-value msg 'destination_id))
+   (cl:slot-value msg 'tag_id))
   (cl:let ((__ros_arr_len (cl:length (cl:slot-value msg 'distance))))
     (cl:write-byte (cl:ldb (cl:byte 8 0) __ros_arr_len) ostream)
     (cl:write-byte (cl:ldb (cl:byte 8 8) __ros_arr_len) ostream)
@@ -77,8 +77,8 @@
     (cl:setf (cl:ldb (cl:byte 8 8) __ros_arr_len) (cl:read-byte istream))
     (cl:setf (cl:ldb (cl:byte 8 16) __ros_arr_len) (cl:read-byte istream))
     (cl:setf (cl:ldb (cl:byte 8 24) __ros_arr_len) (cl:read-byte istream))
-  (cl:setf (cl:slot-value msg 'destination_id) (cl:make-array __ros_arr_len))
-  (cl:let ((vals (cl:slot-value msg 'destination_id)))
+  (cl:setf (cl:slot-value msg 'tag_id) (cl:make-array __ros_arr_len))
+  (cl:let ((vals (cl:slot-value msg 'tag_id)))
     (cl:dotimes (i __ros_arr_len)
     (cl:let ((unsigned 0))
       (cl:setf (cl:ldb (cl:byte 8 0) unsigned) (cl:read-byte istream))
@@ -118,24 +118,24 @@
   "dist_project/uwb_data")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql '<uwb_data>)))
   "Returns md5sum for a message object of type '<uwb_data>"
-  "f96d6cbe0eaf6e7544b86045e6091f3e")
+  "17e78c3780628319859d2345ed3e02ce")
 (cl:defmethod roslisp-msg-protocol:md5sum ((type (cl:eql 'uwb_data)))
   "Returns md5sum for a message object of type 'uwb_data"
-  "f96d6cbe0eaf6e7544b86045e6091f3e")
+  "17e78c3780628319859d2345ed3e02ce")
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql '<uwb_data>)))
   "Returns full string definition for message of type '<uwb_data>"
-  (cl:format cl:nil "int64[] destination_id~%float64[] distance~%~%"))
+  (cl:format cl:nil "int64[] tag_id~%float64[] distance~%~%"))
 (cl:defmethod roslisp-msg-protocol:message-definition ((type (cl:eql 'uwb_data)))
   "Returns full string definition for message of type 'uwb_data"
-  (cl:format cl:nil "int64[] destination_id~%float64[] distance~%~%"))
+  (cl:format cl:nil "int64[] tag_id~%float64[] distance~%~%"))
 (cl:defmethod roslisp-msg-protocol:serialization-length ((msg <uwb_data>))
   (cl:+ 0
-     4 (cl:reduce #'cl:+ (cl:slot-value msg 'destination_id) :key #'(cl:lambda (ele) (cl:declare (cl:ignorable ele)) (cl:+ 8)))
+     4 (cl:reduce #'cl:+ (cl:slot-value msg 'tag_id) :key #'(cl:lambda (ele) (cl:declare (cl:ignorable ele)) (cl:+ 8)))
      4 (cl:reduce #'cl:+ (cl:slot-value msg 'distance) :key #'(cl:lambda (ele) (cl:declare (cl:ignorable ele)) (cl:+ 8)))
 ))
 (cl:defmethod roslisp-msg-protocol:ros-message-to-list ((msg <uwb_data>))
   "Converts a ROS message object to a list"
   (cl:list 'uwb_data
-    (cl:cons ':destination_id (destination_id msg))
+    (cl:cons ':tag_id (tag_id msg))
     (cl:cons ':distance (distance msg))
 ))

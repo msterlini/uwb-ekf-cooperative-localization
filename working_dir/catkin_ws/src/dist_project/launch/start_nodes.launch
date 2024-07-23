@@ -8,7 +8,7 @@
     <!-- I CREATE THE FIRST NAMESPACE STARTING FROM THE LAST ROBOT -->
     <group ns="$(eval 'robot' + str(arg('ns')))">
         <!-- HERE WILL BE STARTED ALL THE NECESSARY NODES FOR EACH ROBOT -->
-        <node name="uwb_dist" pkg="dist_project" type="uwb_distances.py" />
+        <node name="uwb_dist_sim" pkg="dist_project" type="uwb_dist_sim.py" />
     </group>
 
     <!-- HERE LIES THE RECURSIVE LOGIC OF THE LAUNCH FILE THAT CONTINUOSLY LAUNCHES ITSELF UNTIL THE NAMESPACE NUMBER REACH 0 (THE FIRST ROBOT) -->

@@ -19,6 +19,9 @@
   <param name="robot_description" command="$(find xacro)/xacro $(arg model)" />
   <param name="robot_coordinate_file" type="str" value="$(find dist_project)/coordinates/robot_coordinates.csv" />
 
+  <!-- UWB DISTANCE SIMULATOR NODE PARAMETERS -->
+  <param name="initialization_time" type="int" value="5" />
+
   <!-- INITIALIZE GAZEBO NODE -->
   <node pkg="gazebo_ros" type="gazebo" name="gazebo" />
 

@@ -8,12 +8,12 @@ import struct
 
 
 class uwb_data(genpy.Message):
-  _md5sum = "f96d6cbe0eaf6e7544b86045e6091f3e"
+  _md5sum = "17e78c3780628319859d2345ed3e02ce"
   _type = "dist_project/uwb_data"
   _has_header = False  # flag to mark the presence of a Header object
-  _full_text = """int64[] destination_id
+  _full_text = """int64[] tag_id
 float64[] distance"""
-  __slots__ = ['destination_id','distance']
+  __slots__ = ['tag_id','distance']
   _slot_types = ['int64[]','float64[]']
 
   def __init__(self, *args, **kwds):
@@ -24,7 +24,7 @@ float64[] distance"""
     changes.  You cannot mix in-order arguments and keyword arguments.
 
     The available fields are:
-       destination_id,distance
+       tag_id,distance
 
     :param args: complete set of field values, in .msg order
     :param kwds: use keyword arguments corresponding to message field names
@@ -33,12 +33,12 @@ float64[] distance"""
     if args or kwds:
       super(uwb_data, self).__init__(*args, **kwds)
       # message fields cannot be None, assign default values for those that are
-      if self.destination_id is None:
-        self.destination_id = []
+      if self.tag_id is None:
+        self.tag_id = []
       if self.distance is None:
         self.distance = []
     else:
-      self.destination_id = []
+      self.tag_id = []
       self.distance = []
 
   def _get_types(self):
@@ -53,10 +53,10 @@ float64[] distance"""
     :param buff: buffer, ``StringIO``
     """
     try:
-      length = len(self.destination_id)
+      length = len(self.tag_id)
       buff.write(_struct_I.pack(length))
       pattern = '<%sq'%length
-      buff.write(struct.Struct(pattern).pack(*self.destination_id))
+      buff.write(struct.Struct(pattern).pack(*self.tag_id))
       length = len(self.distance)
       buff.write(_struct_I.pack(length))
       pattern = '<%sd'%length
@@ -80,7 +80,7 @@ float64[] distance"""
       start = end
       s = struct.Struct(pattern)
       end += s.size
-      self.destination_id = s.unpack(str[start:end])
+      self.tag_id = s.unpack(str[start:end])
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
@@ -101,10 +101,10 @@ float64[] distance"""
     :param numpy: numpy python module
     """
     try:
-      length = len(self.destination_id)
+      length = len(self.tag_id)
       buff.write(_struct_I.pack(length))
       pattern = '<%sq'%length
-      buff.write(self.destination_id.tostring())
+      buff.write(self.tag_id.tostring())
       length = len(self.distance)
       buff.write(_struct_I.pack(length))
       pattern = '<%sd'%length
@@ -129,7 +129,7 @@ float64[] distance"""
       start = end
       s = struct.Struct(pattern)
       end += s.size
-      self.destination_id = numpy.frombuffer(str[start:end], dtype=numpy.int64, count=length)
+      self.tag_id = numpy.frombuffer(str[start:end], dtype=numpy.int64, count=length)
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
