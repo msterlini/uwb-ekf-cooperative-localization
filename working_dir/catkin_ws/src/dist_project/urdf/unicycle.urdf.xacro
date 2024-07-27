@@ -1,9 +1,6 @@
 <?xml version="1.0"?>
 <robot name="unicycle" xmlns:xacro="http://ros.org/wiki/xacro">
 
-<!-- Include wheel macro-->
-<xacro:include filename="wheel_macro.urdf.xacro" /> 
-
 <!-- Defining the colors used in this robot -->
 <material name="Black">
 <color rgba="0.0 0.0 0.0 1.0"/>
@@ -34,20 +31,17 @@
 <xacro:property name="base_width" value="0.20" /> 
 <xacro:property name="base_height" value="0.03" /> 
 
-<!-- caster wheel radius and height -->
-<!-- caster wheel mass -->
+<!-- Front caster wheel mass, height and radius -->
 <xacro:property name="caster_f_mass" value="0.5" /> 
 <xacro:property name="caster_f_height" value="0.04" /> 
 <xacro:property name="caster_f_radius" value="0.025" /> 
 
-<!-- caster wheel radius and height -->
-<!-- caster wheel mass -->
+<!-- Back caster wheel mass, height and radius -->
+<xacro:property name="caster_b_mass" value="0.5" /> <!-- in kg-->
 <xacro:property name="caster_b_height" value="0.04" /> 
 <xacro:property name="caster_b_radius" value="0.025" /> 
-<xacro:property name="caster_b_mass" value="0.5" /> <!-- in kg-->
 
 <!-- Wheels -->
-
 <xacro:property name="wheel_radius" value="0.04" />   <!--[m]-->
 <xacro:property name="wheel_height" value="0.02" />   <!--[m]--> 
 <xacro:property name="wheel_mass" value="2.5" />      <!--[kg]-->
@@ -63,6 +57,7 @@
                 izz="${m*r*r/2}" />
 </xacro:macro>
 
+<!-- Macro for calculating inertia of box -->
 <xacro:macro name="box_inertia" params="m w d h">
     <inertia ixx="${1/12*m*(h*h + d*d)}" ixy = "0" ixz = "0"
                 iyy="${1/12*m*(w*w + d*d)}" iyz = "0"
@@ -209,6 +204,127 @@
     <material>Gazebo/Black</material>
 </gazebo>
 
+<!-- RIGHT WHEEL DEFINITION -->
+
+<link name="front_right_wheel">
+    <visual>
+    <origin xyz="0 0 0" rpy="${M_PI/2} 0  0 " /> 
+    <geometry>
+        <mesh filename="package://dist_project/mesh/wheel.stl" scale="0.001 0.001 0.001" />
+    </geometry>
+    <material name="Red">
+        <color rgba="0.8 0.0 0.0 1.0"/>
+    </material>
+    </visual>
+
+    <collision>
+    <origin xyz="0 0 0" rpy="${M_PI/2} 0 0 " />
+    <geometry>
+        <cylinder length="${wheel_height}" radius="${wheel_radius}" />
+    </geometry>
+    </collision>
+
+    <inertial>
+    <mass value="${wheel_mass}" />
+    <origin xyz="0 0 0" />
+            <inertia ixx="0.001" ixy="0.0" ixz="0.0"
+            iyy="0.001" iyz="0.0" 
+            izz="0.001" />
+    </inertial>
+</link>
+
+<!-- Physic parameters for Gazebo -->
+<gazebo reference="front_right_wheel">
+    <mu1 value="1.0"/>
+    <mu2 value="1.0"/>
+    <kp  value="10000000.0"/>
+    <kd  value="1.0" />
+    <fdir1 value="1 0 0"/>
+    <material>Gazebo/Grey</material>
+    <turnGravityOff>false</turnGravityOff>
+</gazebo>
+
+<joint name="front_right_wheel_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="front_right_wheel"/>
+    <origin xyz="${-1 * base_x_origin_to_wheel_origin} ${-0.5 * base_y_origin_to_wheel_origin} ${base_z_origin_to_wheel_origin}" rpy="0 0 0" /> 
+    <axis xyz="0 1 0" rpy="0 0 0" />
+    <limit effort="100" velocity="100"/>
+    <joint_properties damping="0.0" friction="0.0"/>
+</joint>
+
+<!-- Transmission: to link joint and controller -->
+<transmission name="front_right_wheel_joint_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="front_right_wheel_joint" />
+
+    <!-- Define Actuation type-->
+    <actuator name="front_right_wheel_joint_motor">
+    <hardwareInterface>EffortJointInterface</hardwareInterface>
+    <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+</transmission>
+
+<!-- LEFT WHEEL DEFINITION -->
+
+<link name="front_left_wheel">
+    <visual>
+    <origin xyz="0 0 0" rpy="${M_PI/2} 0  0 " /> 
+    <geometry>
+        <mesh filename="package://dist_project/mesh/wheel.stl" scale="0.001 0.001 0.001" />
+    </geometry>
+    <material name="Red">
+        <color rgba="0.8 0.0 0.0 1.0"/>
+    </material>
+    </visual>
+
+    <collision>
+    <origin xyz="0 0 0" rpy="${M_PI/2} 0 0 " />
+    <geometry>
+        <cylinder length="${wheel_height}" radius="${wheel_radius}" />
+    </geometry>
+    </collision>
+
+    <inertial>
+    <mass value="${wheel_mass}" />
+    <origin xyz="0 0 0" />
+            <inertia ixx="0.001" ixy="0.0" ixz="0.0"
+            iyy="0.001" iyz="0.0" 
+            izz="0.001" />
+    </inertial>
+</link>
+
+<!-- Physic parameters for Gazebo -->
+<gazebo reference="front_left_wheel">
+    <mu1 value="1.0"/>
+    <mu2 value="1.0"/>
+    <kp  value="10000000.0"/>
+    <kd  value="1.0" />
+    <fdir1 value="1 0 0"/>
+    <material>Gazebo/Grey</material>
+    <turnGravityOff>false</turnGravityOff>
+</gazebo>
+
+<joint name="front_left_wheel_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="front_left_wheel"/>
+    <origin xyz="${-1 * base_x_origin_to_wheel_origin} ${0.5 * base_y_origin_to_wheel_origin} ${base_z_origin_to_wheel_origin}" rpy="0 0 0" /> 
+    <axis xyz="0 1 0" rpy="0 0 0" />
+    <limit effort="100" velocity="100"/>
+    <joint_properties damping="0.0" friction="0.0"/>
+</joint>
+
+<!-- Transmission: to link joint and controller -->
+<transmission name="front_left_wheel_joint_trans">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="front_left_wheel_joint" />
+
+    <!-- Define Actuation type-->
+    <actuator name="front_left_wheel_joint_motor">
+    <hardwareInterface>EffortJointInterface</hardwareInterface>
+    <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+</transmission>
 
 <!-- CAMERA DEFINITION -->
 
@@ -287,11 +403,8 @@
     <material>Gazebo/Blue</material>
 </gazebo>
 
-<!-- Instatiate the wheels' macro -->
-<xacro:wheel fb="front" lr="right" parent="base_link" translateX="-1" translateY="-0.5" flipY="1"/>
-<xacro:wheel fb="front" lr="left" parent="base_link" translateX="-1" translateY="0.5" flipY="1"/>
 
-<!-- Gazebo Plugin -->
+<!-- Gazebo Plugins -->
 <gazebo>
     <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
         <legacyMode>true</legacyMode>
