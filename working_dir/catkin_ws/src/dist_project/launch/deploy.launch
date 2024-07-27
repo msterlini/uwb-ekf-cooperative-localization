@@ -27,6 +27,9 @@
   <!-- MOTION PLANNER NODE PARAMETERS -->
   <param name="motion_planner_rate" type="int" value="1" />
 
+  <!-- KALMAN LOCALIZATION NODE PARAMETERS -->
+  <param name="localization_rate" type="int" value="10" />
+
   <!-- NODES SECTION -->
   <!--==================================================================-->
 

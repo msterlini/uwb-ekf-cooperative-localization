@@ -163,6 +163,7 @@ catkin_install_python(PROGRAMS
   scripts/gazebo_init.py
   scripts/uwb_dist_sim.py
   scripts/motion_planner.py
+  scripts/kalman_localization.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
