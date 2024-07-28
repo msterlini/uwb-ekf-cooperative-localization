@@ -165,6 +165,7 @@ catkin_install_python(PROGRAMS
   scripts/motion_planner.py
   scripts/kalman_localization.py
   scripts/image_processing.py
+  scripts/target_estimator.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
