@@ -247,4 +247,4 @@ if __name__ == "__main__":
             # We don't need to cast any particular function since the estimator already works on the callbacks of the topics
             rate.sleep()
     except rospy.ROSInternalException:
-        rospy.loginfo("Kalman localizatio node interrupted")
+        rospy.loginfo("Kalman localization node interrupted")

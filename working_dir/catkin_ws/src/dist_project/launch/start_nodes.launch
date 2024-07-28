@@ -11,6 +11,7 @@
         <node name="uwb_dist_sim" pkg="dist_project" type="uwb_dist_sim.py" />
         <node name="motion_planner" pkg="dist_project" type="motion_planner.py" />
         <node name="kalman_localization" pkg="dist_project" type="kalman_localization.py" />
+        <node name="image_processing" pkg="dist_project" type="image_processing.py" />
     </group>
 
     <!-- HERE LIES THE RECURSIVE LOGIC OF THE LAUNCH FILE THAT CONTINUOSLY LAUNCHES ITSELF UNTIL THE NAMESPACE NUMBER REACH 0 (THE FIRST ROBOT) -->
