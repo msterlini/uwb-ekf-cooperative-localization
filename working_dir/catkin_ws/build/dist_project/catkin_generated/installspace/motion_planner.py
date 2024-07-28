@@ -100,7 +100,8 @@ class MotionPlanner:
             # If the robot is still searching for a target it's only commanded to turn on the spot
             self.publish_velocity(0, TURN_SPEED)
         elif self.current_state == "TARGET_REACHED":
-            # If the target is reached it continuosly published the target height
+            # If the target is reached the robot stops and continuosly publishes the target height
+            self.publish_velocity(0, 0)
             message = Point()
             message.z = self.target_height
             self.pub_target.publish(message)

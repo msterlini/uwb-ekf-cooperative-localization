@@ -1,19 +1,31 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <root>
  <tabbed_widget name="Main Window" parent="main_window">
-  <Tab containers="1" tab_name="tab1">
+  <Tab tab_name="tab1" containers="1">
    <Container>
-    <DockSplitter orientation="-" count="1" sizes="1">
-     <DockArea name="...">
-      <plot mode="XYPlot" flip_y="false" style="Lines" flip_x="false">
-       <range top="1.681156" right="2.245731" bottom="0.792606" left="0.477827"/>
-       <limitY/>
-       <curve color="#1f77b4" curve_y="/robot1/target_estimate/position/y" name="/robot1/target_estimate/position/[x;y]" curve_x="/robot1/target_estimate/position/x"/>
-       <curve color="#d62728" curve_y="/robot2/target_estimate/position/y" name="/robot2/target_estimate/position/[x;y]" curve_x="/robot2/target_estimate/position/x"/>
-       <curve color="#1ac938" curve_y="/robot3/target_estimate/position/y" name="/robot3/target_estimate/position/[x;y]" curve_x="/robot3/target_estimate/position/x"/>
-       <curve color="#ff7f0e" curve_y="/robot4/target_estimate/position/y" name="/robot4/target_estimate/position/[x;y]" curve_x="/robot4/target_estimate/position/x"/>
-      </plot>
-     </DockArea>
+    <DockSplitter count="1" sizes="1" orientation="-">
+     <DockSplitter count="2" sizes="0.5;0.5" orientation="|">
+      <DockArea name="...">
+       <plot flip_y="false" style="Lines" mode="XYPlot" flip_x="false">
+        <range left="0.963880" bottom="1.648762" right="1.457201" top="2.217922"/>
+        <limitY/>
+        <curve color="#1f77b4" name="/robot0/target_estimate/position/[x;y]" curve_y="/robot0/target_estimate/position/y" curve_x="/robot0/target_estimate/position/x"/>
+        <curve color="#d62728" name="/robot1/target_estimate/position/[x;y]" curve_y="/robot1/target_estimate/position/y" curve_x="/robot1/target_estimate/position/x"/>
+        <curve color="#1ac938" name="/robot2/target_estimate/position/[x;y]" curve_y="/robot2/target_estimate/position/y" curve_x="/robot2/target_estimate/position/x"/>
+        <curve color="#ff7f0e" name="/robot3/target_estimate/position/[x;y]" curve_y="/robot3/target_estimate/position/y" curve_x="/robot3/target_estimate/position/x"/>
+       </plot>
+      </DockArea>
+      <DockArea name="...">
+       <plot flip_y="false" style="Lines" mode="TimeSeries" flip_x="false">
+        <range left="184.164000" bottom="0.711876" right="189.164000" top="0.742238"/>
+        <limitY/>
+        <curve color="#f14cc1" name="/robot0/target_estimate/position/z"/>
+        <curve color="#9467bd" name="/robot1/target_estimate/position/z"/>
+        <curve color="#17becf" name="/robot2/target_estimate/position/z"/>
+        <curve color="#bcbd22" name="/robot3/target_estimate/position/z"/>
+       </plot>
+      </DockArea>
+     </DockSplitter>
     </DockSplitter>
    </Container>
   </Tab>
@@ -24,7 +36,7 @@
  <!-- - - - - - - - - - - - - - - -->
  <Plugins>
   <plugin ID="DataLoad CSV">
-   <parameters delimiter="0" time_axis=""/>
+   <parameters time_axis="" delimiter="0"/>
   </plugin>
   <plugin ID="DataLoad MCAP"/>
   <plugin ID="DataLoad ROS bags">
@@ -33,7 +45,7 @@
    <max_array_size value="100"/>
    <boolean_strings_to_number value="true"/>
    <remove_suffix_from_strings value="true"/>
-   <selected_topics value="/robot1/localization_data_topic;/robot1/ground_truth/state"/>
+   <selected_topics value=""/>
   </plugin>
   <plugin ID="DataLoad ULog"/>
   <plugin ID="ROS Topic Subscriber">
@@ -42,7 +54,7 @@
    <max_array_size value="100"/>
    <boolean_strings_to_number value="true"/>
    <remove_suffix_from_strings value="true"/>
-   <selected_topics value="/robot1/target_estimate;/robot2/target_estimate;/robot3/target_estimate;/robot4/target_estimate"/>
+   <selected_topics value="/robot0/target_estimate;/robot1/target_estimate;/robot2/target_estimate;/robot3/target_estimate"/>
   </plugin>
   <plugin ID="UDP Server"/>
   <plugin ID="WebSocket Server"/>

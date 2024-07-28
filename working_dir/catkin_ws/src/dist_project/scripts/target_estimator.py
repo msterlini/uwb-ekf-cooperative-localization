@@ -1,20 +1,13 @@
 import rospy
-from distributed.msg import robot_data
+from dist_project.msg import robot_data
 from geometry_msgs.msg import Pose, Point
-import time
-import sys
 import numpy as np
-from scipy.optimize import minimize
-
-# Parameters import
-rate_val = rospy.get_param("/target_estimator_rate")
-init_time = rospy.get_param("/initialization_time")
+# from scipy.optimize import minimize
 
 class TargetEstimator:
 
-    def __init__(self, namespace=""):
-        # Namespace variable
-        self.namespace = namespace
+    def __init__(self, namespace):
+
         # Initialization of variables
         self.target_height = 0
         self.x = 0
@@ -25,17 +18,21 @@ class TargetEstimator:
         self.sigma_theta = 0
         self.tag = robot_data()
         self.start_publishing = 0
+        self.namespace = namespace
 
         # Target lectures list from other robots
         self.robot_tags = []
 
         # Subscritpion to local topic for target height
         self.sub_height = rospy.Subscriber("target_height", Point, self.target_callback)
+
         # Subscritpion to local topic for x,y values (robot position)
         self.sub_pos = rospy.Subscriber("localization_data_topic", Pose, self.localization_callback)
+
         # Subscritpion to global topic to publish data to share
         self.pub_tag = rospy.Publisher("/processing_data", robot_data, queue_size=1)
-        # Subscription to global topic to publish the final target estimate
+
+        # Subscription to local topic to publish the final target estimate
         self.pub_target = rospy.Publisher("target_estimate", Pose, queue_size=10)
     
     def target_callback(self, data):
@@ -62,17 +59,18 @@ class TargetEstimator:
             self.tag.sigma_x = self.sigma_x
             self.tag.sigma_y = self.sigma_y
             self.tag.sigma_theta = self.sigma_theta
+
             # Local variable to tell the module to start publishing
             self.start_publishing = 1
-            # Addition of the self-tag to the list of tags
 
-            present = 0
+            # Addition of the self-tag to the list of tags
+            present = False
             for i, tag in enumerate(self.robot_tags):
                 if tag.robot_id == self.namespace:
-                    present = 1
+                    present = True
                     self.robot_tags[i] = self.tag
 
-            if present == 0:
+            if not present:
                 self.robot_tags.append(self.tag)
             
             self.pub_tag.publish(self.tag)
@@ -85,15 +83,15 @@ class TargetEstimator:
         # Called upon reception of other tags from other robots
         
         # Check to assure the tag is not already present
-        present = 0
+        present = False
         for i, tag in enumerate(self.robot_tags):
             if tag.robot_id == data.robot_id:
                 # If the id matches the tag gets updated
-                present = 1
+                present = True
                 self.robot_tags[i] = data
         
         # Otherwise gets added to the list
-        if present == 0:
+        if not present:
             self.robot_tags.append(data)
 
         # When the list contains at least 2 different tags from 2 robots it estimates the target position
@@ -106,14 +104,12 @@ class TargetEstimator:
             sigma_intercepts = []
             # quotes will contain the estimate z coordinate of every robot
             quotes = []
-            # Initial x,y guess for target
-            initial_guess = [0, 0]
 
             for tag in self.robot_tags:
                 # Slope computation
                 slope = np.tan(tag.theta)
                 # I apply the law of propagation of uncertaintes
-                sigma_slope = np.abs(1/np.cos(tag.theta))/(np.cos(tag.theta))**2 * tag.sigma_theta
+                sigma_slope = np.abs(1/np.cos(tag.theta))/np.cos(tag.theta) * tag.sigma_theta
                 # y_intercept computation
                 y_intercept = tag.y - slope * tag.x
                 sigma_intercept = np.sqrt(tag.sigma_y**2 + slope**2 * tag.sigma_x**2 + tag.x**2 * sigma_slope**2)
@@ -123,7 +119,10 @@ class TargetEstimator:
                 intercepts.append(y_intercept)
                 sigma_intercepts.append(sigma_intercept)
 
+            # Alternative way but discarded in the end due to difficult uncertainty estimation
             # Cost function to minimize, it takes the initial guess and the lines parameters
+            # Initial x,y guess for target
+            # initial_guess = [0, 0]
             # def minimize_function(initial_guess, lines):
             #     x, y = initial_guess
             #     total_error = 0
@@ -140,6 +139,10 @@ class TargetEstimator:
             # target_y = result.x[1]
 
             def intersect(slopes, sigma_slopes, y_intercepts, sigma_intercepts):
+                # This function finds the intersection points of each pair of lines representing each robot position and orientation.
+                # It estimates then the target position with a weighted average of all the intersection points
+                # The assigned weight is inversely proportional to each point's uncertainty
+
                 n = len(slopes)
                 intersection_points = []
                 weights = []
@@ -148,15 +151,19 @@ class TargetEstimator:
                     for j in range(i+1, n):
                         if (slopes[i] - slopes[j] > 1e-3):
 
+                            # Simple geometrical formuals to extract the intersection and law of propagation of errors to get the uncertaintes
                             x_intersect = (y_intercepts[j] - y_intercepts[i]) / (slopes[i] - slopes[j])
-                            sigma_x_intersect = np.sqrt((sigma_intercepts[i] / (slopes[i] - slopes[j]))**2 + (sigma_intercepts[j] / (slopes[i] - slopes[j]))**2 + ((y_intercepts[i] - y_intercepts[j]) * (sigma_slopes[i] - sigma_slopes[j]) / (slopes[i] - slopes[j])**2)**2)
+                            sigma_x_intersect = np.sqrt((sigma_intercepts[i] / (slopes[i] - slopes[j]))**2 + (sigma_intercepts[j] / (slopes[i] - slopes[j]))**2 + ((y_intercepts[i] - y_intercepts[j]) * (sigma_slopes[i] + sigma_slopes[j]) / (slopes[i] - slopes[j])**2)**2)
 
                             y_intersect = slopes[i] * x_intersect + y_intercepts[i]
                             sigma_y_intersect = np.sqrt((x_intersect * sigma_slopes[i])**2 + (slopes[i] * sigma_x_intersect)**2 + sigma_intercepts[i]**2)
 
                             intersection_points.append((x_intersect, y_intersect))
+
+                            # Weights computing as the inverse of the overall uncertaintyy of the intersection point just found
                             weights.append(1 / np.sqrt(sigma_x_intersect**2 + sigma_y_intersect**2))
                 
+                # Weighted average point computation
                 if intersection_points:
                     total_weight = sum(weights)
                     weighted_sum_x = sum(w * point[0] for w, point in zip(weights, intersection_points))
@@ -173,8 +180,10 @@ class TargetEstimator:
                 else:
                     return None, None, None, None
 
+            # Target position with uncertaintes extraction
             target_x, sigma_target_x, target_y, sigma_target_y = intersect(slopes, sigma_slopes, intercepts, sigma_intercepts)
 
+            # Once the plane position of the target has been computed its height estimation will be carried out
             if target_x != None:
                 # z-cooridnate estimation considering the vertical fov is 60 degrees. At a value of target_height of 1 corresponds 60 degrees. For 0 is 0 degrees.
 
@@ -188,6 +197,7 @@ class TargetEstimator:
                     # Direct consequence from the definition of tangent
                     quotes.append(np.tan(vertical_angle) * distance)
 
+                    # Uncertainty computation via law of propagation of error
                     sigma_distance = np.sqrt((2 * (tag.x - target_x) * self.tag.sigma_x)**2 + (2 * (tag.y - target_y) * self.tag.sigma_y)**2)
                     sigma_vertical_angle = np.pi / 3 * 0.001
                     sigma_quotes = np.sqrt((np.tan(vertical_angle) * sigma_distance)**2 + (distance / np.cos(vertical_angle)**2 * np.pi / 3 * sigma_vertical_angle)**2)
@@ -207,30 +217,28 @@ class TargetEstimator:
                 message.orientation.z = sigma_target_z
                 self.pub_target.publish(message)
         
-def main(args):
-    # I take the argument passed when calling the script to take the string of the namespace
-    if (args[1]):
-        namespace = args[1]
-    else:
-        namespace = 'robot1'
+
+if __name__ == '__main__':
 
     # Node initialization
-    rospy.init_node(namespace + '_target_estimator', anonymous=True)
+    rospy.init_node('target_estimator', anonymous=True)
+
+    # Parameters import
+    rate_val = rospy.get_param("/target_estimator_rate")
+    id = rospy.get_param('~namespace')
+    namespace = "robot" + str(id)
+
     # Class initialization
     target_estimator = TargetEstimator(namespace)
-
-    time.sleep(init_time)
+    
+    # Rospy rate of node imposition
+    rate = rospy.Rate(rate_val)
 
     try:
-        rate = rospy.Rate(rate_val)
-        while (not rospy.is_shutdown()):
+        while not rospy.is_shutdown():
             # Start self-tag publishing
             if target_estimator.start_publishing:
                 target_estimator.pub_tag.publish(target_estimator.tag)
-    except KeyboardInterrupt:
-        print("Shutting down")
-
-if __name__ == '__main__':
-    main(sys.argv)
-
-
+            rate.sleep()
+    except rospy.ROSInternalException:
+        rospy.loginfo("Target estimator node interrupted")

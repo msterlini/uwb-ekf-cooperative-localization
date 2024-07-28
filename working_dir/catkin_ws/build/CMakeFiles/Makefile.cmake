@@ -26,6 +26,7 @@ set(CMAKE_MAKEFILE_DEPENDS
   "/home/marco/shared/working_dir/catkin_ws/src/dist_project/scripts/image_processing.py"
   "/home/marco/shared/working_dir/catkin_ws/src/dist_project/scripts/kalman_localization.py"
   "/home/marco/shared/working_dir/catkin_ws/src/dist_project/scripts/motion_planner.py"
+  "/home/marco/shared/working_dir/catkin_ws/src/dist_project/scripts/target_estimator.py"
   "/home/marco/shared/working_dir/catkin_ws/src/dist_project/scripts/uwb_dist_sim.py"
   "/opt/ros/noetic/share/catkin/cmake/all.cmake"
   "/opt/ros/noetic/share/catkin/cmake/assert.cmake"
