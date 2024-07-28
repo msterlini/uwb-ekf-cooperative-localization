@@ -108,7 +108,7 @@ class TargetEstimator:
             for tag in self.robot_tags:
                 # Slope computation
                 slope = np.tan(tag.theta)
-                # I apply the law of propagation of uncertaintes
+                # I apply the law of propagation of uncertainties
                 sigma_slope = np.abs(1/np.cos(tag.theta))/np.cos(tag.theta) * tag.sigma_theta
                 # y_intercept computation
                 y_intercept = tag.y - slope * tag.x
@@ -151,7 +151,7 @@ class TargetEstimator:
                     for j in range(i+1, n):
                         if (slopes[i] - slopes[j] > 1e-3):
 
-                            # Simple geometrical formuals to extract the intersection and law of propagation of errors to get the uncertaintes
+                            # Simple geometrical formuals to extract the intersection and law of propagation of errors to get the uncertainties
                             x_intersect = (y_intercepts[j] - y_intercepts[i]) / (slopes[i] - slopes[j])
                             sigma_x_intersect = np.sqrt((sigma_intercepts[i] / (slopes[i] - slopes[j]))**2 + (sigma_intercepts[j] / (slopes[i] - slopes[j]))**2 + ((y_intercepts[i] - y_intercepts[j]) * (sigma_slopes[i] + sigma_slopes[j]) / (slopes[i] - slopes[j])**2)**2)
 
@@ -180,12 +180,12 @@ class TargetEstimator:
                 else:
                     return None, None, None, None
 
-            # Target position with uncertaintes extraction
+            # Target position with uncertainties extraction
             target_x, sigma_target_x, target_y, sigma_target_y = intersect(slopes, sigma_slopes, intercepts, sigma_intercepts)
 
             # Once the plane position of the target has been computed its height estimation will be carried out
             if target_x != None:
-                # z-cooridnate estimation considering the vertical fov is 60 degrees. At a value of target_height of 1 corresponds 60 degrees. For 0 is 0 degrees.
+                # z-coordinate estimation considering the vertical fov is 60 degrees. At a value of target_height of 1 corresponds 60 degrees. For 0 is 0 degrees.
 
                 squared_sum_sigma = 0                
 
