@@ -31,7 +31,7 @@
   <param name="localization_rate" type="int" value="10" />
 
   <!-- TARGET ESTIMATOR NODE PARAMETERS -->
-  <param name="target_estimator_rate" type="int" value="30" />
+  <param name="target_estimator_rate" type="int" value="10" />
 
   <!-- NODES SECTION -->
   <!--==================================================================-->
