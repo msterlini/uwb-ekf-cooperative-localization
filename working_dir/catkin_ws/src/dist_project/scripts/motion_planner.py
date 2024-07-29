@@ -125,6 +125,8 @@ if __name__ == "__main__":
             # Main loop where the finite state machine controller is invoked
             motion_planner.execute_state_machine()
             rate.sleep()
+    except rospy.ROSInterruptException:
+        rospy.loginfo("Program shutdown: Motion planner node interrupted")
     except rospy.ROSInternalException:
         rospy.loginfo("Motion planner node interrupted")
 

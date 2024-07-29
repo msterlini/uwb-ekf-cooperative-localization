@@ -246,5 +246,7 @@ if __name__ == "__main__":
         while not rospy.is_shutdown():
             # We don't need to cast any particular function since the estimator already works on the callbacks of the topics
             rate.sleep()
+    except rospy.ROSInterruptException:
+        rospy.loginfo("Program shutdown: Kalman filter estimator node interrupted")
     except rospy.ROSInternalException:
         rospy.loginfo("Kalman localization node interrupted")

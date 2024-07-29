@@ -378,6 +378,7 @@
         </camera>
         <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
             <frame_name>camera_optical_link</frame_name>
+            <cameraName>camera</cameraName>
         </plugin>
     </sensor>
 </gazebo>
@@ -410,7 +411,6 @@
         <legacyMode>true</legacyMode>
         <rosDebugLevel>Debug</rosDebugLevel>
         <publishWheelTF>true</publishWheelTF>
-        <publishTf>1</publishTf>
         <publishWheelJointState>true</publishWheelJointState>
         <alwaysOn>true</alwaysOn>
         <updateRate>10.0</updateRate>
@@ -425,6 +425,9 @@
         <odometryFrame>odom</odometryFrame> 
         <odometryTopic>odom</odometryTopic> 
         <robotBaseFrame>base_ground</robotBaseFrame>
+        <odometrySource>world</odometrySource>
+        <publishTf>1</publishTf>
+        <publishOdomTF>true</publishOdomTF>
     </plugin>
     <plugin name="p3d_base_controller" filename="libgazebo_ros_p3d.so">
         <alwaysOn>true</alwaysOn>

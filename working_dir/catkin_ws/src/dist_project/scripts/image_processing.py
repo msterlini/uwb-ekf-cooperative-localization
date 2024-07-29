@@ -36,7 +36,7 @@ class BlobDetector:
         self.bridge = CvBridge()
 
         # Subscribing topics
-        self.image_sub = rospy.Subscriber("image_raw", Image, self.callback)
+        self.image_sub = rospy.Subscriber("camera/image_raw", Image, self.callback)
 
     # Blob detecting function: returns keypoints and mask
     def blob_detect(self, image,                  # The frame (cv standard)
@@ -310,5 +310,7 @@ if __name__ == '__main__':
     try:
         rospy.spin()
         # We don't need to cast any particular function since the detector already works on the callbacks of the topics
+    except rospy.ROSInterruptException:
+        rospy.loginfo("Program shutdown: Image processing node interrupted")
     except rospy.ROSInternalException:
         rospy.loginfo("Blob detector node interrupted")
