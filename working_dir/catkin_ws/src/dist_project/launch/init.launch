@@ -38,8 +38,12 @@
 
   <!-- INITIALIZE GAZEBO NODE -->
   <node pkg="gazebo_ros" type="gazebo" name="gazebo" />
-
-
   <node pkg="dist_project" type="gazebo_init.py" name="gazebo_init" />
+
+  <!-- INITIALIZE CAMERA POINT OF VIEW NODE -->
+  <node pkg="rqt_image_view" type="rqt_image_view" name="camera_blob_viewer" />  
+
+  <!-- INITIALIZE PLOT MANAGER NODE -->
+  <!-- <node pkg="plotjuggler" type="plotjuggler" name="plotjuggler" /> -->
 
 </launch>

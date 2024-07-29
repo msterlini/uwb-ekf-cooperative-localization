@@ -27,7 +27,7 @@ class TargetEstimator:
         self.pub_tag = rospy.Publisher("/processing_data", robot_data, queue_size=1)
 
         # Subscription to local topic to publish the final target estimate
-        self.pub_target = rospy.Publisher("target_estimate", Pose, queue_size=10)
+        self.pub_target = rospy.Publisher("target_estimate", Pose, queue_size=1)
 
         # Subscritpion to local topic for target height
         self.sub_height = rospy.Subscriber("target_height", Point, self.target_callback)
@@ -249,7 +249,12 @@ class TargetEstimator:
                 message.orientation.x = sigma_target_x
                 message.orientation.y = sigma_target_y
                 message.orientation.z = sigma_target_z
-                self.pub_target.publish(message)
+
+                try:
+                    self.pub_target.publish(message)
+                # Sometimes it raises an exception when publishing the first message, i catch the exception since it has no effects on the program execution
+                except rospy.exceptions.ROSException as e:
+                    rospy.loginfo(str(e))
         
 
 if __name__ == '__main__':
