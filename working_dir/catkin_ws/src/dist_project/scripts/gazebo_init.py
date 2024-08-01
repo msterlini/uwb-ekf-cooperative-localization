@@ -9,7 +9,7 @@ import tf2_ros
 import time
 import roslaunch
 
-# Import parameters defined in deploy.launch
+# Import parameters defined in init.launch
 
 # Tag parameters import
 z_height = rospy.get_param("tag_height")
