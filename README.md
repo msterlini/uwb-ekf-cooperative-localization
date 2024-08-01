@@ -1,6 +1,6 @@
 # Distributed project
 
-The aim of this project was to develop a environment in ROS and Gazebo for the deployment of a indoor scenario with many unicycles that could be used as a starting basis for future project.
+The aim of this project was to develop a environment in ROS and Gazebo for the deployment of a indoor scenario with many unicycles that could be used as a starting basis for future projects.
 
 In particular in order to address the topics of the course this project saw the dynamic deployment of a number of unicycles and UWB tags, the problems that were solved regard the ego-localization and the collaborative estimation of the position of a target in the 3-D environment.
 
