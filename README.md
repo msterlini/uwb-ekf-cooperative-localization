@@ -29,6 +29,12 @@ In particular the main folders where most of the material lie are the following,
 ## Installation 
 There are many requirements necessary, in order to simplify the execution the whole project has been developed inside a Docker container in order to guarantee compatibility along all platforms. 
 
+This github repository must be cloned into a folder on the user computer with:
+```sh
+    git clone https://github.com/Marcosterlo/Distributed_project.git
+```
+
+
 To run the Docker container for this project, use the following command. You will need to replace `/home/marco/Desktop/ROS` with the local folder where this GitHub repository has been cloned to.
 
 ```sh
