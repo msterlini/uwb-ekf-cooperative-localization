@@ -2,11 +2,10 @@
 
 These python scripts hold all the nodes and logic of the project
 
-## `init_gazebo.py`
+## `gazebo_init.py`
 ## Key Features
-- **Spawns Models in Gazebo**: Dynamically spawns tags, targets, robots, and the room model in the Gazebo simulation environment using URDF and SDF files.
-- **Publishes Static Transforms**: Continuously publishes static transforms for the tags, aiding in localization tasks.
-- **Initializes Nodes**: Recursively launches additional ROS nodes for each robot based on the specified number of robots in a CSV file.
+This node dynamically spawns tags, targets, robots and the room model in the Gazebo simulation environment. It also recursively initialize all the other ROS nodes for each robot based on the specified number of lines in the csv file.
+It also continuosly publishes static transforms for the tags, aiding in localization tasks.
 
 ## Topics
 The script interacts with the following topics:
@@ -15,9 +14,9 @@ The script interacts with the following topics:
 - Static transforms are published for tags to the `/tf_static` topic using `tf2_ros.StaticTransformBroadcaster`.
 
 ## Parameters
-The script imports various parameters from the `deploy.launch` file:
+The script imports various parameters from the `init.launch` file:
 - **Tag Parameters**:
-  - `tag_height`: Height at which to spawn tags.
+  - `tag_height`: Height at which to spawn tags on the ceiling.
   - `tag_distance_rate`: Frequency at which to publish tag positions.
   - `tag_coordinate_file`: CSV file containing coordinates for tags.
   - `tag_urdf_file`: URDF file for tag models.
@@ -39,8 +38,4 @@ The script imports various parameters from the `deploy.launch` file:
 - **`spawn_room()`**: Spawns the room model in the simulation using an SDF file.
 - **`publish_static_transform(x, y, id)`**: Publishes the static transform for a tag.
 
-## Usage
-To use the script, ensure the ROS environment is properly set up and the necessary parameters are defined in the `deploy.launch` file. Run the script to initialize the Gazebo environment, spawn the models, and start the required nodes.
-
-```bash
-rosrun your_package init_gazebo.py
+## `uwb_dist_sim.py`
