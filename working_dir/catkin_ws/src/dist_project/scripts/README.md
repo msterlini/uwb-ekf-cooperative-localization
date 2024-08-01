@@ -39,3 +39,20 @@ The script imports various parameters from the `init.launch` file:
 - **`publish_static_transform(x, y, id)`**: Publishes the static transform for a tag.
 
 ## `uwb_dist_sim.py`
+
+## Key Features
+It dynamically retrieves and stores the positions of UWB anchors in the simulation environment, ti also computes the distance between the robot and each UWB anchor, adding realistic noise to the measurements, finally it publishes the calculated distances and corresponding anchor IDs to a ROS topic.
+
+## Topics
+The script interacts with the following topics:
+- **Subscription**: 
+  - `/ground_truth/state`: Subscribes to this topic to get the robot's current ground truth position.
+- **Publication**:
+  - `uwb_data_topic`: Publishes UWB distance data using a custom message type `uwb_data`.
+
+## Functions
+- **`get_anchor_pos()`**: Retrieves and stores the positions of UWB anchors using the `tf` package.
+- **`subscribe_data(data)`**: Callback function for the ground truth subscriber, updates the robot's position, and triggers distance calculation.
+- **`uwb_sim()`**: Calculates distances from the robot to each UWB anchor and calls the publish function.
+- **`calculate_distance(uwb_pose)`**: Computes the distance between the robot and a given UWB anchor position, adding noise to simulate measurement errors.
+- **`publish_data(ids, distances)`**: Publishes the calculated distances and anchor IDs to the `uwb_data_topic`.
