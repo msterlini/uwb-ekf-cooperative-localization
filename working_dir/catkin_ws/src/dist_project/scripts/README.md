@@ -2,7 +2,7 @@
 
 These python scripts hold all the nodes and logic of the project
 
-# 1 `gazebo_init.py`
+# `gazebo_init.py`
 ## Key Features
 This node dynamically spawns tags, targets, robots and the room model in the Gazebo simulation environment. It also recursively initialize all the other ROS nodes for each robot based on the specified number of lines in the csv file.
 It also continuosly publishes static transforms for the tags, aiding in localization tasks.
@@ -38,7 +38,7 @@ The script imports various parameters from the `init.launch` file:
 - **`spawn_room()`**: Spawns the room model in the simulation using an SDF file.
 - **`publish_static_transform(x, y, id)`**: Publishes the static transform for a tag.
 
-# 2 `uwb_dist_sim.py`
+# `uwb_dist_sim.py`
 
 ## Key Features
 It dynamically retrieves and stores the positions of UWB anchors in the simulation environment, ti also computes the distance between the robot and each UWB anchor, adding realistic noise to the measurements, finally it publishes the calculated distances and corresponding anchor IDs to a ROS topic.
@@ -58,7 +58,7 @@ The script interacts with the following topics:
 - **`publish_data(ids, distances)`**: Publishes the calculated distances and anchor IDs to the `uwb_data_topic`.
 
 
-# 3 `blob_detector.py`
+# `blob_detector.py`
 
 ## Key Features
 It identifies yellow spheres in the image stream using color thresholding and blob detection, then it publishes the coordinates of detected blobs to a ROS topic and finally it visualizes detected blobs and the search window on the processed image.
@@ -84,7 +84,7 @@ The script interacts with the following topics:
 - **`set_blob_params(self, blob_params)`**: Sets the blob detection parameters.
 - **`callback(self, data)`**: Callback function for the image subscriber, processes the image to detect blobs and publishes the results.
 
-# 4 `kalman_localization.py`
+# `kalman_localization.py`
 
 ## Key Features
 
@@ -108,7 +108,7 @@ The script interacts with the following topics:
 - **`publish_data(self, pose_x, pose_y, pose_yaw)`**: Publishes the estimated robot state and uncertainties to the ROS topic.
 - **`get_anchors_pos(self)`**: Retrieves and updates UWB anchor positions from the simulation environment.
 
-# 5 `motion_planner.py`
+# `motion_planner.py`
 
 ## Key Features
 This script manages robot behavior using a finite state machine (FSM), it uses PID control for target orientation and movement and it publishes velocity commands and target height data.
@@ -130,7 +130,7 @@ The script interacts with the following topics:
 - **`publish_velocity(self, linear_x, angular_z)`**: Publishes movement commands to `cmd_vel`.
 - **`execute_state_machine(self)`**: Executes FSM logic to handle state transitions and actions.
 
-# 6 `target_estimator.py`
+# `target_estimator.py`
 
 ## Key Features
 This script estimates the target's position and height using data from multiple robots. It publishes target estimates and robot tags to facilitate collaborative localization.
