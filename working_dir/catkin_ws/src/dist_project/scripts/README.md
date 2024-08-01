@@ -2,7 +2,7 @@
 
 These python scripts hold all the nodes and logic of the project
 
-## `gazebo_init.py`
+# `gazebo_init.py`
 ## Key Features
 This node dynamically spawns tags, targets, robots and the room model in the Gazebo simulation environment. It also recursively initialize all the other ROS nodes for each robot based on the specified number of lines in the csv file.
 It also continuosly publishes static transforms for the tags, aiding in localization tasks.
@@ -38,7 +38,7 @@ The script imports various parameters from the `init.launch` file:
 - **`spawn_room()`**: Spawns the room model in the simulation using an SDF file.
 - **`publish_static_transform(x, y, id)`**: Publishes the static transform for a tag.
 
-## `uwb_dist_sim.py`
+# `uwb_dist_sim.py`
 
 ## Key Features
 It dynamically retrieves and stores the positions of UWB anchors in the simulation environment, ti also computes the distance between the robot and each UWB anchor, adding realistic noise to the measurements, finally it publishes the calculated distances and corresponding anchor IDs to a ROS topic.
@@ -58,15 +58,10 @@ The script interacts with the following topics:
 - **`publish_data(ids, distances)`**: Publishes the calculated distances and anchor IDs to the `uwb_data_topic`.
 
 
-# blob_detector.py
-
-## Overview
-`blob_detector.py` is a ROS (Robot Operating System) script that continuously processes image streams from a robot's camera to identify yellow spheres (targets) and publishes their coordinates. It utilizes the `cv2` (OpenCV) module extensively for image processing tasks.
+# `blob_detector.py`
 
 ## Key Features
-- **Blob Detection**: Identifies yellow spheres in the image stream using color thresholding and blob detection.
-- **Coordinate Publishing**: Publishes the coordinates of detected blobs to a ROS topic.
-- **Visualization**: Visualizes detected blobs and the search window on the processed image.
+It identifies yellow spheres in the image stream using color thresholding and blob detection, then it publishes the coordinates of detected blobs to a ROS topic and finally it visualizes detected blobs and the search window on the processed image.
 
 ## Topics
 The script interacts with the following topics:
@@ -75,16 +70,8 @@ The script interacts with the following topics:
 - **Publication**:
   - `target/image_blob`: Publishes the processed image with detected blobs.
   - `target/point_blob`: Publishes the coordinates of the detected blob.
-
-## Parameters
-The script allows for several configurable parameters, such as:
-- **Thresholds**: HSV color thresholds for detecting yellow blobs.
-- **Blur**: Amount of blur applied to the image to reduce noise.
-- **Blob Parameters**: Parameters for configuring the blob detector.
-- **Detection Window**: Specifies the region of the image to search for blobs.
-
+  - 
 ## Functions
-- **`__init__(self, thr_min, thr_max, blur=15, blob_params=None, detection_window=None)`**: Initializes the detector with given parameters, sets up publishers and subscribers, and initializes the CV Bridge.
 - **`blob_detect(self, image, hsv_min, hsv_max, blur=0, blob_params=None, search_window=None)`**: Detects blobs in the given image based on HSV thresholds and blob detection parameters.
 - **`draw_keypoints(self, image, keypoints, line_color=(0,0,255))`**: Draws detected blobs on the image.
 - **`draw_window(self, image, window_adim, color=(255,0,0), line=5)`**: Draws the search window on the image.
