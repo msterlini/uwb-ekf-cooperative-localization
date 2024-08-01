@@ -8,13 +8,25 @@
     <!-- I CREATE THE FIRST NAMESPACE STARTING FROM THE LAST ROBOT -->
     <group ns="$(eval 'robot' + str(arg('ns')))">
         <!-- HERE WILL BE STARTED ALL THE NECESSARY NODES FOR EACH ROBOT -->
+        
+        <!-- NODE THAT SIMULATES THE UWB TAGS'S DISTANCE FROM EACH ROBOT -->
         <node name="uwb_dist_sim" pkg="dist_project" type="uwb_dist_sim.py" />
+        
+        <!-- NODE THAT HANDLES THE MOTION PLANNING OF THE ROBOT -->
         <node name="motion_planner" pkg="dist_project" type="motion_planner.py" />
+        
+        <!-- NODE THAT HANDLES THE EGO-LOCALIZATION VIA A KALMAN FILTER -->
         <node name="kalman_localization" pkg="dist_project" type="kalman_localization.py" />
+        
+        <!-- NODE THAT HANDLES THE IMAGE PROCESSING OF THE RAW IMAGE DATA COMING FROM GAZEBO SIMULATION -->
         <node name="image_processing" pkg="dist_project" type="image_processing.py" />
+        
+        <!-- NODE THAT HANDLES THE TARGET ESTIMATION -->
         <node name="target_estimator" pkg="dist_project" type="target_estimator.py" >
             <param name="namespace" value="$(arg ns)" />
         </node>
+        
+        <!-- NODE THAT IF UNCOMMENTED LAUNCH A SIMPLE TERMINAL CONTROLLER FOR THE ROBOT, USED FOR PLOTTING PURPOSES -->
         <!-- <node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" /> -->
 
     </group>

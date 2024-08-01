@@ -1,4 +1,4 @@
-# CSV COORDINATES FILES
+# CSV coordinates files
 
 Here are the `.csv` files containing the spawn coordinates of the simulation entities.
 
