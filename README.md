@@ -31,11 +31,20 @@ There are many requirements necessary, in order to simplify the execution the wh
 
 This github repository must be cloned into a folder on the user computer with:
 ```sh
-    git clone https://github.com/Marcosterlo/Distributed_project.git
+git clone https://github.com/Marcosterlo/Distributed_project.git
 ```
 
 
-To run the Docker container for this project, use the following command. You will need to replace `/home/marco/Desktop/ROS` with the local folder where this GitHub repository has been cloned to.
+To run the Docker container for this project, use the following command. You will need to replace `/path/to/your/local/folder` with the local folder where this GitHub repository has been cloned to.
 
 ```sh
 sudo docker run --name ubuntu_ros -v /tmp/.X11-unix/:/tmp/.X11-unix/ -v /path/to/your/local/folder:/home/marco/shared --env="DISPLAY=$DISPLAY" --privileged --shm-size 2g --rm -i -t --user=marco --workdir=/home/marco marcosterlo/ubuntu:ros bash
+```
+
+## Usage
+
+In order to start the simulation run the following command:
+
+```sh
+roslaunch dist_project init.launch
+```
