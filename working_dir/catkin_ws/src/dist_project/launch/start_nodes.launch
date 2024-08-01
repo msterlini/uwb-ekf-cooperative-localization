@@ -15,6 +15,7 @@
         <node name="target_estimator" pkg="dist_project" type="target_estimator.py" >
             <param name="namespace" value="$(arg ns)" />
         </node>
+        <!-- <node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" /> -->
 
     </group>
 

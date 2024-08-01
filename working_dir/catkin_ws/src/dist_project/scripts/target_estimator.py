@@ -4,6 +4,9 @@ from geometry_msgs.msg import Pose, Point
 import numpy as np
 # from scipy.optimize import minimize
 
+# Vertical tilt of the camera taken out empirically
+VERTICAL_TILT = 67 * np.pi / 180
+
 class TargetEstimator:
 
     def __init__(self, namespace):
@@ -62,7 +65,10 @@ class TargetEstimator:
             self.tag.sigma_theta = self.sigma_theta
 
             # Local variable to tell the module to start publishing
-            self.start_publishing = 1
+            if not self.start_publishing:
+                # Subscription to global topic for communication
+                self.sub_data = rospy.Subscriber("/processing_data", robot_data, self.gather_callback)
+                self.start_publishing = 1
 
             # Addition of the self-tag to the list of tags
             present = False
@@ -76,69 +82,67 @@ class TargetEstimator:
             
             self.pub_tag.publish(self.tag)
 
-            # Subscription to global topic for communication
-            self.sub_data = rospy.Subscriber("/processing_data", robot_data, self.gather_callback)
 
-    def intersect(self, slopes, sigma_slopes, y_intercepts, sigma_intercepts):
-        # This function finds the intersection points of each pair of lines representing each robot position and orientation.
-        # It estimates then the target position with a weighted average of all the intersection points
-        # The assigned weight is inversely proportional to each point's uncertainty
+    # def intersect(self, slopes, sigma_slopes, y_intercepts, sigma_intercepts):
+    #     # This function finds the intersection points of each pair of lines representing each robot position and orientation.
+    #     # It estimates then the target position with a weighted average of all the intersection points
+    #     # The assigned weight is inversely proportional to each point's uncertainty
 
-        # Alternative way but discarded in the end due to difficult uncertainty estimation
-        # Cost function to minimize, it takes the initial guess and the lines parameters
-        # Initial x,y guess for target
-        # initial_guess = [0, 0]
-        # def minimize_function(initial_guess, lines):
-        #     x, y = initial_guess
-        #     total_error = 0
+    #     # Alternative way but discarded in the end due to difficult uncertainty estimation
+    #     # Cost function to minimize, it takes the initial guess and the lines parameters
+    #     # Initial x,y guess for target
+    #     # initial_guess = [0, 0]
+    #     # def minimize_function(initial_guess, lines):
+    #     #     x, y = initial_guess
+    #     #     total_error = 0
             
-        #     for slope, y_intercept in lines:
-        #         # The error is the distance from the current guess point x,y to the line y = slope * x + y_intercept
-        #         error = (y - slope * x - y_intercept)**2
-        #         total_error += error
-        #     return total_error
+    #     #     for slope, y_intercept in lines:
+    #     #         # The error is the distance from the current guess point x,y to the line y = slope * x + y_intercept
+    #     #         error = (y - slope * x - y_intercept)**2
+    #     #         total_error += error
+    #     #     return total_error
 
-        # # Optimization problem to estimate x,y coordinates of target
-        # result = minimize(minimize_function, initial_guess, args=(lines,))
-        # target_x = result.x[0]
-        # target_y = result.x[1]
+    #     # # Optimization problem to estimate x,y coordinates of target
+    #     # result = minimize(minimize_function, initial_guess, args=(lines,))
+    #     # target_x = result.x[0]
+    #     # target_y = result.x[1]
 
-        n = len(slopes)
-        intersection_points = []
-        weights = []
+    #     n = len(slopes)
+    #     intersection_points = []
+    #     weights = []
 
-        for i in range(n):
-            for j in range(i+1, n):
-                if (slopes[i] - slopes[j] > 1e-3):
+    #     for i in range(n):
+    #         for j in range(i+1, n):
+    #             if (slopes[i] - slopes[j] > 1e-3):
 
-                    # Simple geometrical formuals to extract the intersection and law of propagation of errors to get the uncertainties
-                    x_intersect = (y_intercepts[j] - y_intercepts[i]) / (slopes[i] - slopes[j])
-                    sigma_x_intersect = np.sqrt((sigma_intercepts[i] / (slopes[i] - slopes[j]))**2 + (sigma_intercepts[j] / (slopes[i] - slopes[j]))**2 + ((y_intercepts[i] - y_intercepts[j]) * (sigma_slopes[i] + sigma_slopes[j]) / (slopes[i] - slopes[j])**2)**2)
+    #                 # Simple geometrical formuals to extract the intersection and law of propagation of errors to get the uncertainties
+    #                 x_intersect = (y_intercepts[j] - y_intercepts[i]) / (slopes[i] - slopes[j])
+    #                 sigma_x_intersect = np.sqrt((sigma_intercepts[i] / (slopes[i] - slopes[j]))**2 + (sigma_intercepts[j] / (slopes[i] - slopes[j]))**2 + ((y_intercepts[i] - y_intercepts[j]) * (sigma_slopes[i] + sigma_slopes[j]) / (slopes[i] - slopes[j])**2)**2)
 
-                    y_intersect = slopes[i] * x_intersect + y_intercepts[i]
-                    sigma_y_intersect = np.sqrt((x_intersect * sigma_slopes[i])**2 + (slopes[i] * sigma_x_intersect)**2 + sigma_intercepts[i]**2)
+    #                 y_intersect = slopes[i] * x_intersect + y_intercepts[i]
+    #                 sigma_y_intersect = np.sqrt((x_intersect * sigma_slopes[i])**2 + (slopes[i] * sigma_x_intersect)**2 + sigma_intercepts[i]**2)
 
-                    intersection_points.append((x_intersect, y_intersect))
+    #                 intersection_points.append((x_intersect, y_intersect))
 
-                    # Weights computing as the inverse of the overall uncertaintyy of the intersection point just found
-                    weights.append(1 / np.sqrt(sigma_x_intersect**2 + sigma_y_intersect**2))
+    #                 # Weights computing as the inverse of the overall uncertaintyy of the intersection point just found
+    #                 weights.append(1 / np.sqrt(sigma_x_intersect**2 + sigma_y_intersect**2))
         
-        # Weighted average point computation
-        if intersection_points:
-            total_weight = sum(weights)
-            weighted_sum_x = sum(w * point[0] for w, point in zip(weights, intersection_points))
-            weighted_sum_y = sum(w * point[1] for w, point in zip(weights, intersection_points))
+    #     # Weighted average point computation
+    #     if intersection_points:
+    #         total_weight = sum(weights)
+    #         weighted_sum_x = sum(w * point[0] for w, point in zip(weights, intersection_points))
+    #         weighted_sum_y = sum(w * point[1] for w, point in zip(weights, intersection_points))
 
-            avg_x = weighted_sum_x / total_weight
-            avg_y = weighted_sum_y / total_weight
+    #         avg_x = weighted_sum_x / total_weight
+    #         avg_y = weighted_sum_y / total_weight
 
-            avg_x_err = np.sqrt(1/total_weight)
-            avg_y_err = np.sqrt(1/total_weight)
+    #         avg_x_err = np.sqrt(1/total_weight)
+    #         avg_y_err = np.sqrt(1/total_weight)
 
-            return avg_x, avg_x_err, avg_y, avg_y_err
+    #         return avg_x, avg_x_err, avg_y, avg_y_err
         
-        else:
-            return None, None, None, None
+    #     else:
+    #         return None, None, None, None
 
     def least_square_estimation(self, slopes, sigma_slopes, y_intercepts, sigma_y_intercepts):
         n = len(slopes)
@@ -165,7 +169,7 @@ class TargetEstimator:
         
         p, residuals, rank, s = np.linalg.lstsq(A_weighted, b_weighted, rcond=None)
 
-        cov_matrix = np.linalg.inv(A.T @ C_inv @ A)
+        cov_matrix = np.linalg.inv(A.T @ A)
 
         sigma_x = np.sqrt(cov_matrix[0, 0])
         sigma_y = np.sqrt(cov_matrix[1, 1])
@@ -227,13 +231,13 @@ class TargetEstimator:
                     # Plane distance from robot and target
                     distance = np.sqrt((tag.x - target_x)**2 + (tag.y - target_y)**2)
                     # Vertical angle computation proportional to target_height value
-                    vertical_angle = tag.target_height * np.pi/3
+                    vertical_angle = tag.target_height * VERTICAL_TILT
                     # Direct consequence from the definition of tangent
                     quotes.append(np.tan(vertical_angle) * distance)
 
                     # Uncertainty computation via law of propagation of error
                     sigma_distance = np.sqrt((2 * (tag.x - target_x) * self.tag.sigma_x)**2 + (2 * (tag.y - target_y) * self.tag.sigma_y)**2)
-                    sigma_vertical_angle = np.pi / 3 * 0.001
+                    sigma_vertical_angle = VERTICAL_TILT * 0.001
                     sigma_quotes = np.sqrt((np.tan(vertical_angle) * sigma_distance)**2 + (distance / np.cos(vertical_angle)**2 * np.pi / 3 * sigma_vertical_angle)**2)
                     squared_sum_sigma = squared_sum_sigma + sigma_quotes**2
                 
