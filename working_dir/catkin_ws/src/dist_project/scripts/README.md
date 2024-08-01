@@ -51,7 +51,7 @@ The script interacts with the following topics:
 - **Publication**:
   - `target/image_blob`: Publishes the processed image with detected blobs.
   - `target/point_blob`: Publishes the coordinates of the detected blob.
-  - 
+
 ## Functions
 - **`blob_detect(self, image, hsv_min, hsv_max, blur=0, blob_params=None, search_window=None)`**: Detects blobs in the given image based on HSV thresholds and blob detection parameters.
 - **`draw_keypoints(self, image, keypoints, line_color=(0,0,255))`**: Draws detected blobs on the image.
