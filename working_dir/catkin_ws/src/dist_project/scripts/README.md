@@ -80,7 +80,7 @@ The script interacts with the following topics:
 - **Publication:**
   - `localization_data_topic` (Pose): Publishes the estimated robot state including position, orientation, and uncertainties.
   - `init_move` (Pose): Signals the motion planner to start moving once the filter's estimates are reliable.
-  - 
+
 ## Functions
 - **`prediction_step(self, odom_data: Odometry)`**: Updates and predicts the robot’s state based on Odometry data and publishes the estimated state.
 - **`correction_step(self, uwb_data: uwb_data)`**: Refines the robot’s state estimate using UWB data and notifies the motion planner when ready.
