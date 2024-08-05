@@ -53,8 +53,8 @@ class KalmanEstimator:
 
         # Constant noise addition
         noise = 0.1**2
-        v_noise = np.random.normal(0, 0.1)
-        w_noise = np.random.normal(0, 0.1)
+        v_noise = np.random.normal(0, 0.1)*delta_vel**2
+        w_noise = np.random.normal(0, 0.1)*delta_w**2
 
         # Covariance matrix of the process
         # I take a constant value and I add a contribute proportional to the actual value read
