@@ -95,7 +95,7 @@ class UwbSimulation:
         uwb_dist = np.sum((p1 - p2)**2, axis=0)
         
         # The noise I add is proportional to the actual measured distance, the closer the robot is to a tag the more precise the measusrement will be
-        uwb_dist = uwb_dist + np.random.normal(0, uwb_dist*0.015, 1)
+        uwb_dist = uwb_dist*(1 + np.random.normal(0, 0.015, 1))
 
         # I return the sqrt of the new value
         return np.sqrt(uwb_dist)

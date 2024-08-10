@@ -88,25 +88,6 @@ class TargetEstimator:
     #     # It estimates then the target position with a weighted average of all the intersection points
     #     # The assigned weight is inversely proportional to each point's uncertainty
 
-    #     # Alternative way but discarded in the end due to difficult uncertainty estimation
-    #     # Cost function to minimize, it takes the initial guess and the lines parameters
-    #     # Initial x,y guess for target
-    #     # initial_guess = [0, 0]
-    #     # def minimize_function(initial_guess, lines):
-    #     #     x, y = initial_guess
-    #     #     total_error = 0
-            
-    #     #     for slope, y_intercept in lines:
-    #     #         # The error is the distance from the current guess point x,y to the line y = slope * x + y_intercept
-    #     #         error = (y - slope * x - y_intercept)**2
-    #     #         total_error += error
-    #     #     return total_error
-
-    #     # # Optimization problem to estimate x,y coordinates of target
-    #     # result = minimize(minimize_function, initial_guess, args=(lines,))
-    #     # target_x = result.x[0]
-    #     # target_y = result.x[1]
-
     #     n = len(slopes)
     #     intersection_points = []
     #     weights = []
@@ -223,7 +204,7 @@ class TargetEstimator:
 
             # Once the plane position of the target has been computed its height estimation will be carried out
             if target_x != None:
-                # z-coordinate estimation considering the vertical fov is 60 degrees. At a value of target_height of 1 corresponds 60 degrees. For 0 is 0 degrees.
+                # z-coordinate estimation considering the vertical fov is 67 degrees. At a value of target_height of 1 corresponds 67 degrees. For 0 is 0 degrees.
 
                 squared_sum_sigma = 0                
 
