@@ -8,4 +8,13 @@ A ROS bagfile (with a `.bag` extension) is a file format in ROS for storing ROS 
 
 ## Usage in this project
 
-ROS bagfiles have been used to store simulations' runs in order to manipulate the data and plot the desired features to add in the report
+ROS bagfiles have been used to store simulations' runs in order to manipulate the data and plot the desired features to add in the report.
+
+The following commands have been used to acquire the files:
+
+```sh
+rosbag record /robot0/localization_data_topic /robot0/ground_truth/state -O few_tags.bag
+```
+```sh
+rosbag record -e "(.*)localization_data_topic(.*)" "(.*)ground_truth/state(.*)" "(.*)target_estimate(.*)" -O total_bag.bag
+```
