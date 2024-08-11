@@ -43,8 +43,9 @@ sudo docker run --name ubuntu_ros -v /tmp/.X11-unix/:/tmp/.X11-unix/ -v /path/to
 
 ## Usage
 
-In order to start the simulation run the following command:
+Once inside the docker container, in order to start the simulation run the following command:
 
 ```sh
 roslaunch dist_project init.launch
 ```
+It will also open a window containing the point of view of the camera of one of the unicycles
