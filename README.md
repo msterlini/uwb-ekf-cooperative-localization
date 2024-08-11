@@ -48,4 +48,4 @@ Once inside the docker container, in order to start the simulation run the follo
 ```sh
 roslaunch dist_project init.launch
 ```
-It will also open a window containing the point of view of the camera of one of the unicycles
+It will also open a window containing the point of view of the camera of one of the unicycles and a open source software called plotjuggler. See `plotjuggler` folder for further instructions
