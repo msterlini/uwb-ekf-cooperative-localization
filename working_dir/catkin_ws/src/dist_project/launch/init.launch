@@ -44,6 +44,6 @@
   <node pkg="rqt_image_view" type="rqt_image_view" name="camera_blob_viewer" />  
 
   <!-- INITIALIZE PLOT MANAGER NODE -->
-  <!-- <node pkg="plotjuggler" type="plotjuggler" name="plotjuggler" /> -->
+  <node pkg="plotjuggler" type="plotjuggler" name="plotjuggler" />
 
 </launch>
