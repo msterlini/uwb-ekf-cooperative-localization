@@ -13,9 +13,12 @@ if __name__ == "__main__":
     topic1 = "/robot0/localization_data_topic"
     topic2 = "/robot0/ground_truth/state"
 
+    # Empty lists to contain all data
     loc_data = []
     gt_data = []
 
+    # Data extraction
+    # Packing of data iterating all messages stored
     with rosbag.Bag(bagfile, 'r') as bag:
         for topic, msg, t in bag.read_messages(topics=[topic1]):
             x = msg.position.x
@@ -28,8 +31,11 @@ if __name__ == "__main__":
             y = msg.pose.pose.position.y
             gt_data.append([x, y])
 
+    # Conversion of python list to numpy array
     loc_data = np.array(loc_data)
     gt_data = np.array(gt_data)
+
+    # List of tag position
     tags = np.array(
         [[-10,-3],
         [-10,3],

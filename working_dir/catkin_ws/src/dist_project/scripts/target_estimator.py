@@ -126,17 +126,22 @@ class TargetEstimator:
     #         return None, None, None, None
 
     def least_square_estimation(self, slopes, sigma_slopes, y_intercepts, sigma_y_intercepts):
+        # Number of unicycles
         n = len(slopes)
+
+        # Matrix initialization
         A = np.zeros((n,2))
         b = np.zeros(n)
         C_inv = np.zeros((n, n))
 
+        # Loop to fill all the matrices
         for i in range(n):
             m = slopes[i]
             b_i = y_intercepts[i]
             sigma_m = sigma_slopes[i]
             sigma_b = sigma_y_intercepts[i]
 
+            # Combined uncertainty computation
             combined_sigma = np.sqrt(sigma_m**2 + sigma_b**2)
 
             A[i, 0] = m
@@ -145,16 +150,22 @@ class TargetEstimator:
 
             C_inv[i, i] = 1.0 / combined_sigma**2
         
+        # Weighting A and b matrices using the inverse of the covariance matrix
         A_weighted = C_inv @ A
         b_weighted = C_inv @ b
         
+        # Solving the LSQ problem
+        # Equivalent of p = (Aw^T . Aw)^-1 . Aw^T . bw with Aw and bw being the previosuly weighted matrices
         p, residuals, rank, s = np.linalg.lstsq(A_weighted, b_weighted, rcond=None)
 
-        cov_matrix = np.linalg.inv(A.T @ A)
+        # Covariance matrix computation
+        cov_matrix = np.linalg.inv(A.T @ C_inv @ A)
 
+        # Uncertaintes extraction
         sigma_x = np.sqrt(cov_matrix[0, 0])
         sigma_y = np.sqrt(cov_matrix[1, 1])
 
+        # Returns slope, y-intercepts with corresponding uncertaintes
         return p[0], sigma_x, p[1], sigma_y
 
     
