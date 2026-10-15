@@ -3,6 +3,8 @@
 
   <!-- gui:=false STARTS GAZEBO WITHOUT GRAPHICAL INTERFACES, record:=true SAVES A BAG FILE IN bagfiles/ -->
   <arg name="gui" default="true" />
+  <!-- plotjuggler:=false IF PLOTJUGGLER IS NOT INSTALLED -->
+  <arg name="plotjuggler" default="true" />
   <arg name="record" default="false" />
   <arg name="bag_name" default="run" />
   <!-- overview_camera:=true ADDS A FIXED CAMERA ABOVE THE ROOM PUBLISHING ON /overview_camera/image_raw -->
@@ -72,7 +74,7 @@
   <node if="$(arg gui)" pkg="rqt_image_view" type="rqt_image_view" name="camera_blob_viewer" />  
 
   <!-- INITIALIZE PLOT MANAGER NODE -->
-  <node if="$(arg gui)" pkg="plotjuggler" type="plotjuggler" name="plotjuggler" />
+  <node if="$(eval arg('gui') and arg('plotjuggler'))" pkg="plotjuggler" type="plotjuggler" name="plotjuggler" />
 
   <!-- RECORDING OF LOCALIZATION, GROUND TRUTH AND TARGET ESTIMATE TOPICS -->
   <node if="$(arg record)" pkg="rosbag" type="record" name="recorder"
