@@ -1,0 +1,6 @@
+.git
+build
+devel
+docs
+plots/*.png
+**/__pycache__
