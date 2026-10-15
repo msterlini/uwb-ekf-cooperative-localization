@@ -8,11 +8,11 @@
       <plot flip_x="false" style="Lines" flip_y="false" mode="XYPlot">
        <range top="2.608045" bottom="0.876534" left="-0.598848" right="2.513296"/>
        <limitY/>
-       <curve curve_y="/robot0/localization_data_topic/position/y" curve_x="/robot0/localization_data_topic/position/x" name="/robot0/localization_data_topic/position/[x;y]" color="#bcbd22"/>
-       <curve curve_y="/robot1/localization_data_topic/position/y" curve_x="/robot1/localization_data_topic/position/x" name="/robot1/localization_data_topic/position/[x;y]" color="#1f77b4"/>
-       <curve curve_y="/robot2/localization_data_topic/position/y" curve_x="/robot2/localization_data_topic/position/x" name="/robot2/localization_data_topic/position/[x;y]" color="#d62728"/>
-       <curve curve_y="/robot3/localization_data_topic/position/y" curve_x="/robot3/localization_data_topic/position/x" name="/robot3/localization_data_topic/position/[x;y]" color="#1ac938"/>
-       <curve curve_y="/robot4/localization_data_topic/position/y" curve_x="/robot4/localization_data_topic/position/x" name="/robot4/localization_data_topic/position/[x;y]" color="#ff7f0e"/>
+       <curve curve_y="/robot0/localization_data_topic/pose/pose/position/y" curve_x="/robot0/localization_data_topic/pose/pose/position/x" name="/robot0/localization_data_topic/pose/pose/position/[x;y]" color="#bcbd22"/>
+       <curve curve_y="/robot1/localization_data_topic/pose/pose/position/y" curve_x="/robot1/localization_data_topic/pose/pose/position/x" name="/robot1/localization_data_topic/pose/pose/position/[x;y]" color="#1f77b4"/>
+       <curve curve_y="/robot2/localization_data_topic/pose/pose/position/y" curve_x="/robot2/localization_data_topic/pose/pose/position/x" name="/robot2/localization_data_topic/pose/pose/position/[x;y]" color="#d62728"/>
+       <curve curve_y="/robot3/localization_data_topic/pose/pose/position/y" curve_x="/robot3/localization_data_topic/pose/pose/position/x" name="/robot3/localization_data_topic/pose/pose/position/[x;y]" color="#1ac938"/>
+       <curve curve_y="/robot4/localization_data_topic/pose/pose/position/y" curve_x="/robot4/localization_data_topic/pose/pose/position/x" name="/robot4/localization_data_topic/pose/pose/position/[x;y]" color="#ff7f0e"/>
       </plot>
      </DockArea>
     </DockSplitter>

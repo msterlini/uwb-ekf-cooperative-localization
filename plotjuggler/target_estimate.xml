@@ -8,33 +8,33 @@
       <plot flip_x="false" style="Lines" flip_y="false" mode="TimeSeries">
        <range top="0.976553" bottom="0.923544" left="97.407000" right="102.407000"/>
        <limitY/>
-       <curve name="/robot1/target_estimate/position/x" color="#1f77b4"/>
-       <curve name="/robot0/target_estimate/position/x" color="#d62728"/>
-       <curve name="/robot2/target_estimate/position/x" color="#1ac938"/>
-       <curve name="/robot3/target_estimate/position/x" color="#ff7f0e"/>
-       <curve name="/robot4/target_estimate/position/x" color="#f14cc1"/>
+       <curve name="/robot1/target_estimate/pose/pose/position/x" color="#1f77b4"/>
+       <curve name="/robot0/target_estimate/pose/pose/position/x" color="#d62728"/>
+       <curve name="/robot2/target_estimate/pose/pose/position/x" color="#1ac938"/>
+       <curve name="/robot3/target_estimate/pose/pose/position/x" color="#ff7f0e"/>
+       <curve name="/robot4/target_estimate/pose/pose/position/x" color="#f14cc1"/>
       </plot>
      </DockArea>
      <DockArea name="...">
       <plot flip_x="false" style="Lines" flip_y="false" mode="TimeSeries">
        <range top="2.247296" bottom="2.181211" left="97.407000" right="102.407000"/>
        <limitY/>
-       <curve name="/robot0/target_estimate/position/y" color="#9467bd"/>
-       <curve name="/robot1/target_estimate/position/y" color="#17becf"/>
-       <curve name="/robot2/target_estimate/position/y" color="#bcbd22"/>
-       <curve name="/robot3/target_estimate/position/y" color="#1f77b4"/>
-       <curve name="/robot4/target_estimate/position/y" color="#d62728"/>
+       <curve name="/robot0/target_estimate/pose/pose/position/y" color="#9467bd"/>
+       <curve name="/robot1/target_estimate/pose/pose/position/y" color="#17becf"/>
+       <curve name="/robot2/target_estimate/pose/pose/position/y" color="#bcbd22"/>
+       <curve name="/robot3/target_estimate/pose/pose/position/y" color="#1f77b4"/>
+       <curve name="/robot4/target_estimate/pose/pose/position/y" color="#d62728"/>
       </plot>
      </DockArea>
      <DockArea name="...">
       <plot flip_x="false" style="Lines" flip_y="false" mode="TimeSeries">
        <range top="0.879067" bottom="0.860662" left="97.407000" right="102.407000"/>
        <limitY/>
-       <curve name="/robot0/target_estimate/position/z" color="#1ac938"/>
-       <curve name="/robot1/target_estimate/position/z" color="#ff7f0e"/>
-       <curve name="/robot2/target_estimate/position/z" color="#f14cc1"/>
-       <curve name="/robot3/target_estimate/position/z" color="#9467bd"/>
-       <curve name="/robot4/target_estimate/position/z" color="#17becf"/>
+       <curve name="/robot0/target_estimate/pose/pose/position/z" color="#1ac938"/>
+       <curve name="/robot1/target_estimate/pose/pose/position/z" color="#ff7f0e"/>
+       <curve name="/robot2/target_estimate/pose/pose/position/z" color="#f14cc1"/>
+       <curve name="/robot3/target_estimate/pose/pose/position/z" color="#9467bd"/>
+       <curve name="/robot4/target_estimate/pose/pose/position/z" color="#17becf"/>
       </plot>
      </DockArea>
     </DockSplitter>
