@@ -9,4 +9,4 @@ Contains the scripts used to create the plots of the report and of the main READ
 python3 plots/scripts/uncertainty.py bagfiles/total_bag.bag --save
 ```
 
-`multiple.png`, `x_estimate.png`, `y_estimate.png` and `z_estimate.png` come from the current version, the other images are the ones of the report.
+`multiple.png`, `x_estimate.png`, `y_estimate.png` and `z_estimate.png` come from `total_bag.bag` (current version), the other images are the ones of the report.
