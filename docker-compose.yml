@@ -1,0 +1,23 @@
+# GUI run on a Linux host with X11:   xhost +local:docker && docker compose up sim
+# Headless run that records a bag:    docker compose run --rm headless
+services:
+  sim:
+    build: .
+    image: dist_project:noetic
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ./bagfiles:/catkin_ws/src/dist_project/bagfiles
+    command: roslaunch dist_project init.launch
+
+  headless:
+    build: .
+    image: dist_project:noetic
+    volumes:
+      - ./bagfiles:/catkin_ws/src/dist_project/bagfiles
+    command: >
+      bash -c "xvfb-run -a -s '-screen 0 1280x1024x24'
+      timeout --signal=INT ${DURATION:-240}
+      roslaunch dist_project init.launch gui:=false record:=true bag_name:=${BAG_NAME:-run}"

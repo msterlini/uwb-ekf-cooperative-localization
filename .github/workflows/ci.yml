@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install numpy pytest ruff
+      - run: ruff check .
+      - run: pytest -q
+
+  catkin-build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the ROS Noetic image (catkin_make)
+        run: docker build -t dist_project:noetic .
+      - name: Run the tests inside the ROS environment
+        run: docker run --rm dist_project:noetic bash -c "cd src/dist_project && python3 -m pytest -q test"
