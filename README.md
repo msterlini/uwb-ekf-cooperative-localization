@@ -36,6 +36,10 @@ flowchart LR
 
 **Target estimation.** A robot that reached the target is stopped and points at it, so the target lies on its bearing line $-\sin\theta_i\, x + \cos\theta_i\, y = -\sin\theta_i\, x_i + \cos\theta_i\, y_i$. The planar position is the weighted least-squares intersection of the lines of all the robots, each weighted with the uncertainty of the robot pose propagated to the line; the height comes from the elevation at which every camera sees the target.
 
+![How it works](docs/animation.gif)
+
+*Illustration made from the recorded run: EKF localization of one robot, with the range corrections from the anchors and the 2-σ ellipse (×10), then the bearing lines of the five robots and their weighted least-squares intersection, next to the true target. Made with [Manim](https://www.manim.community/); source in [msterlini/website](https://github.com/msterlini/website/tree/main/manim).*
+
 ## Results
 
 Run of 5 robots and 6 anchors recorded in [`bagfiles/total_bag.bag`](bagfiles), evaluated against the Gazebo ground truth with [`plots/scripts/uncertainty.py`](plots/scripts/uncertainty.py):
