@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>dist_project</name>
+  <version>1.0.0</version>
+  <description>
+    Multi-robot simulation in ROS/Gazebo: EKF ego-localization of unicycles from
+    odometry and UWB ranging, and cooperative 3-D target estimation by
+    weighted least-squares fusion of the robots' bearing lines.
+  </description>
+
+  <maintainer email="marcosterlo@gmail.com">Marco Sterlini</maintainer>
+  <author>Marco Sterlini</author>
+  <license>MIT</license>
+
+  <url type="repository">https://github.com/msterlini/Distributed_project</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>message_generation</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_export_depend>message_runtime</build_export_depend>
+  <exec_depend>message_runtime</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>roslaunch</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>tf</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
+
+  <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>gazebo_msgs</exec_depend>
+  <exec_depend>gazebo_plugins</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>rqt_image_view</exec_depend>
+  <exec_depend>plotjuggler_ros</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+  </export>
+</package>
