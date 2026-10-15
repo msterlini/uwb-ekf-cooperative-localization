@@ -9,6 +9,10 @@ A ROS/Gazebo simulation of a team of unicycle robots in an indoor room. Each rob
 
 Project of the course *Distributed Estimation for Robots and Vehicles* (2024). The full report, *Distributed unicycle system for the estimation of the 3D position of a target*, is in [`docs/report.pdf`](docs/report.pdf).
 
+![Simulation](docs/demo.gif)
+
+*Overview camera of a run: estimated trajectories of the five robots (coloured trails) and cooperative estimate of the target (yellow cross).*
+
 ## How it works
 
 ```mermaid
@@ -34,17 +38,22 @@ flowchart LR
 
 ## Results
 
-Headless run of 5 robots and 6 anchors, evaluated against the Gazebo ground truth with [`plots/scripts/uncertainty.py`](plots/scripts/uncertainty.py):
+Run of 5 robots and 6 anchors recorded in [`bagfiles/total_bag.bag`](bagfiles), evaluated against the Gazebo ground truth with [`plots/scripts/uncertainty.py`](plots/scripts/uncertainty.py):
 
-| Robot | RMSE x [m] | RMSE y [m] | RMSE theta [deg] | Mean predicted std x, y [m] |
+| Robot | RMSE x [m] | RMSE y [m] | RMSE θ [deg] | Mean predicted σ x, y [m] |
 |---|---|---|---|---|
-| 0 | 0.043 | 0.042 | 10.85 | 0.020, 0.021 |
-| 1 | 0.016 | 0.021 | 8.26 | 0.021, 0.016 |
-| 2 | 0.013 | 0.015 | 2.51 | 0.007, 0.021 |
-| 3 | 0.036 | 0.038 | 19.54 | 0.019, 0.023 |
-| 4 | 0.022 | 0.020 | 5.70 | 0.026, 0.015 |
+| 0 | 0.016 | 0.014 | 4.9 | 0.017, 0.019 |
+| 1 | 0.015 | 0.009 | 1.2 | 0.022, 0.012 |
+| 2 | 0.010 | 0.014 | 1.7 | 0.008, 0.021 |
+| 3 | 0.013 | 0.013 | 2.4 | 0.015, 0.020 |
+| 4 | 0.017 | 0.014 | 5.2 | 0.021, 0.015 |
 
-The position errors are a few centimetres and consistent with the covariance predicted by the filter. The heading error stays constant after the initial estimate from the travelled direction, without drifting. With the two robots that reached the target, the cooperative estimate was (0.91, 1.74, 0.83) m against the true (1.00, 2.00, 0.80) m.
+All the robots reach the target. The cooperative estimate is **(0.965, 1.952, 0.825) m** against the true (1.00, 2.00, 0.80) m, an error of **6.4 cm**. The position errors are consistent with the covariance predicted by the filter, and the heading error stays at the value of the initial estimate instead of drifting.
+
+<p align="center">
+  <img src="plots/multiple.png" width="49%" />
+  <img src="plots/z_estimate.png" width="49%" />
+</p>
 
 ## Running the simulation
 
