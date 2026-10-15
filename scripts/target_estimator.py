@@ -1,11 +1,12 @@
-import rospy
-from dist_project.msg import robot_data
-from geometry_msgs.msg import Pose, Point
+#!/usr/bin/env python3
 import numpy as np
-# from scipy.optimize import minimize
+import rospy
+import tf.transformations
+from geometry_msgs.msg import Point, PoseWithCovarianceStamped
 
-# Vertical tilt of the camera taken out empirically
-VERTICAL_TILT = 67 * np.pi / 180
+from dist_project.msg import robot_data
+from dist_project.triangulation import estimate_height, intersect_bearings
+
 
 class TargetEstimator:
 
@@ -13,245 +14,95 @@ class TargetEstimator:
 
         # Initialization of variables
         self.target_height = 0
-        self.x = 0
-        self.sigma_x = 0
-        self.y = 0
-        self.sigma_y = 0
-        self.theta = 0
-        self.sigma_theta = 0
         self.tag = robot_data()
         self.start_publishing = 0
         self.namespace = namespace
 
-        # Target lectures list from other robots
-        self.robot_tags = []
+        # Target lectures from every robot, own included, indexed by robot id
+        self.robot_tags = {}
 
         # Subscritpion to global topic to publish data to share
-        self.pub_tag = rospy.Publisher("/processing_data", robot_data, queue_size=1)
+        self.pub_tag = rospy.Publisher("/processing_data", robot_data, queue_size=10)
 
         # Subscription to local topic to publish the final target estimate
-        self.pub_target = rospy.Publisher("target_estimate", Pose, queue_size=1)
+        self.pub_target = rospy.Publisher("target_estimate", PoseWithCovarianceStamped, queue_size=1)
 
         # Subscritpion to local topic for target height
-        self.sub_height = rospy.Subscriber("target_height", Point, self.target_callback)
+        self.sub_height = rospy.Subscriber("target_height", Point, self.target_callback, queue_size=1)
 
         # Subscritpion to local topic for x,y values (robot position)
-        self.sub_pos = rospy.Subscriber("localization_data_topic", Pose, self.localization_callback)
+        self.sub_pos = rospy.Subscriber("localization_data_topic", PoseWithCovarianceStamped,
+                                        self.localization_callback, queue_size=1)
 
-    
     def target_callback(self, data):
-        # Everytime the robots receives a new data from the local camera it uploads the current stored value for the target height
+        # Everytime the robots receives a new data from the local camera it uploads the current stored value for the
+        # target height
         self.target_height = -data.z
 
-    def localization_callback(self, acutual_pos):
-        # Everytime the robot receives new data from the localization module uploads the current stored values
-        self.x = acutual_pos.position.x
-        self.y = acutual_pos.position.y
-        self.theta = acutual_pos.orientation.z
-        self.sigma_x = acutual_pos.orientation.x
-        self.sigma_y = acutual_pos.orientation.y
-        self.sigma_theta = acutual_pos.orientation.w
-        
-        # If it has already stored a value for the target height it means the robot is on position and then can start publishing the data to the others robot
-        if self.target_height != 0:
-            # Compilation of the self-tag with all the informations
-            self.tag.robot_id = self.namespace
-            self.tag.target_height = self.target_height
-            self.tag.x = self.x
-            self.tag.y = self.y
-            self.tag.theta = self.theta
-            self.tag.sigma_x = self.sigma_x
-            self.tag.sigma_y = self.sigma_y
-            self.tag.sigma_theta = self.sigma_theta
+    def localization_callback(self, actual_pos):
+        # If it has already stored a value for the target height it means the robot is on position and then can start
+        # publishing the data to the others robot
+        if self.target_height == 0:
+            return
 
-            # Local variable to tell the module to start publishing
-            if not self.start_publishing:
-                # Subscription to global topic for communication
-                self.sub_data = rospy.Subscriber("/processing_data", robot_data, self.gather_callback)
-                self.start_publishing = 1
+        pose = actual_pos.pose.pose
+        q = pose.orientation
+        (roll, pitch, theta) = tf.transformations.euler_from_quaternion([q.x, q.y, q.z, q.w])
+        covariance = np.reshape(actual_pos.pose.covariance, (6, 6))
 
-            # Addition of the self-tag to the list of tags
-            present = False
-            for i, tag in enumerate(self.robot_tags):
-                if tag.robot_id == self.namespace:
-                    present = True
-                    self.robot_tags[i] = self.tag
+        # Compilation of the self-tag with all the informations, the uncertainties are standard deviations
+        tag = robot_data()
+        tag.robot_id = self.namespace
+        tag.target_height = self.target_height
+        tag.x = pose.position.x
+        tag.y = pose.position.y
+        tag.theta = theta
+        tag.sigma_x = np.sqrt(covariance[0, 0])
+        tag.sigma_y = np.sqrt(covariance[1, 1])
+        tag.sigma_theta = np.sqrt(covariance[5, 5])
+        self.tag = tag
 
-            if not present:
-                self.robot_tags.append(self.tag)
-            
-            self.pub_tag.publish(self.tag)
+        # Local variable to tell the module to start publishing
+        if not self.start_publishing:
+            # Subscription to global topic for communication
+            self.sub_data = rospy.Subscriber("/processing_data", robot_data, self.gather_callback, queue_size=50)
+            self.start_publishing = 1
 
-
-    # def intersect(self, slopes, sigma_slopes, y_intercepts, sigma_intercepts):
-    #     # This function finds the intersection points of each pair of lines representing each robot position and orientation.
-    #     # It estimates then the target position with a weighted average of all the intersection points
-    #     # The assigned weight is inversely proportional to each point's uncertainty
-
-    #     n = len(slopes)
-    #     intersection_points = []
-    #     weights = []
-
-    #     for i in range(n):
-    #         for j in range(i+1, n):
-    #             if (slopes[i] - slopes[j] > 1e-3):
-
-    #                 # Simple geometrical formuals to extract the intersection and law of propagation of errors to get the uncertainties
-    #                 x_intersect = (y_intercepts[j] - y_intercepts[i]) / (slopes[i] - slopes[j])
-    #                 sigma_x_intersect = np.sqrt((sigma_intercepts[i] / (slopes[i] - slopes[j]))**2 + (sigma_intercepts[j] / (slopes[i] - slopes[j]))**2 + ((y_intercepts[i] - y_intercepts[j]) * (sigma_slopes[i] + sigma_slopes[j]) / (slopes[i] - slopes[j])**2)**2)
-
-    #                 y_intersect = slopes[i] * x_intersect + y_intercepts[i]
-    #                 sigma_y_intersect = np.sqrt((x_intersect * sigma_slopes[i])**2 + (slopes[i] * sigma_x_intersect)**2 + sigma_intercepts[i]**2)
-
-    #                 intersection_points.append((x_intersect, y_intersect))
-
-    #                 # Weights computing as the inverse of the overall uncertaintyy of the intersection point just found
-    #                 weights.append(1 / np.sqrt(sigma_x_intersect**2 + sigma_y_intersect**2))
-        
-    #     # Weighted average point computation
-    #     if intersection_points:
-    #         total_weight = sum(weights)
-    #         weighted_sum_x = sum(w * point[0] for w, point in zip(weights, intersection_points))
-    #         weighted_sum_y = sum(w * point[1] for w, point in zip(weights, intersection_points))
-
-    #         avg_x = weighted_sum_x / total_weight
-    #         avg_y = weighted_sum_y / total_weight
-
-    #         avg_x_err = np.sqrt(1/total_weight)
-    #         avg_y_err = np.sqrt(1/total_weight)
-
-    #         return avg_x, avg_x_err, avg_y, avg_y_err
-        
-    #     else:
-    #         return None, None, None, None
-
-    def least_square_estimation(self, slopes, sigma_slopes, y_intercepts, sigma_y_intercepts):
-        # Number of unicycles
-        n = len(slopes)
-
-        # Matrix initialization
-        A = np.zeros((n,2))
-        b = np.zeros(n)
-        C_inv = np.zeros((n, n))
-
-        # Loop to fill all the matrices
-        for i in range(n):
-            m = slopes[i]
-            b_i = y_intercepts[i]
-            sigma_m = sigma_slopes[i]
-            sigma_b = sigma_y_intercepts[i]
-
-            # Combined uncertainty computation
-            combined_sigma = np.sqrt(sigma_m**2 + sigma_b**2)
-
-            A[i, 0] = m
-            A[i, 1] = -1
-            b[i] = -b_i
-
-            C_inv[i, i] = 1.0 / combined_sigma**2
-        
-        # Weighting A and b matrices using the inverse of the covariance matrix
-        A_weighted = C_inv @ A
-        b_weighted = C_inv @ b
-        
-        # Solving the LSQ problem
-        # Equivalent of p = (Aw^T . Aw)^-1 . Aw^T . bw with Aw and bw being the previosuly weighted matrices
-        p, residuals, rank, s = np.linalg.lstsq(A_weighted, b_weighted, rcond=None)
-
-        # Covariance matrix computation
-        cov_matrix = np.linalg.inv(A.T @ C_inv @ A)
-
-        # Uncertaintes extraction
-        sigma_x = np.sqrt(cov_matrix[0, 0])
-        sigma_y = np.sqrt(cov_matrix[1, 1])
-
-        # Returns slope, y-intercepts with corresponding uncertaintes
-        return p[0], sigma_x, p[1], sigma_y
-
-    
     def gather_callback(self, data):
-        # Called upon reception of other tags from other robots
-        
-        # Check to assure the tag is not already present
-        present = False
-        for i, tag in enumerate(self.robot_tags):
-            if tag.robot_id == data.robot_id:
-                # If the id matches the tag gets updated
-                present = True
-                self.robot_tags[i] = data
-        
-        # Otherwise gets added to the list
-        if not present:
-            self.robot_tags.append(data)
+        # Called upon reception of tags from other robots, the tag of the same robot gets updated
+        self.robot_tags[data.robot_id] = data
 
         # When the list contains at least 2 different tags from 2 robots it estimates the target position
-        if (len(self.robot_tags) >= 2):        
-            
-            # lines will be a list of tuples containing the slope and y intercept of the direction line of each robot
-            slopes = []
-            sigma_slopes = []
-            intercepts = []
-            sigma_intercepts = []
-            # quotes will contain the estimate z coordinate of every robot
-            quotes = []
+        if len(self.robot_tags) < 2:
+            return
 
-            for tag in self.robot_tags:
-                # Slope computation
-                slope = np.tan(tag.theta)
-                # I apply the law of propagation of uncertainties
-                sigma_slope = tag.sigma_theta/(np.cos(tag.theta))**2 
-                # y_intercept computation
-                y_intercept = tag.y - slope * tag.x
-                sigma_intercept = np.sqrt(tag.sigma_y**2 + slope**2 * tag.sigma_x**2 + tag.x**2 * sigma_slope**2)
- 
-                slopes.append(slope)
-                sigma_slopes.append(sigma_slope)
-                intercepts.append(y_intercept)
-                sigma_intercepts.append(sigma_intercept)
+        tags = list(self.robot_tags.values())
+        robots = [[t.x, t.y, t.theta, t.sigma_x, t.sigma_y, t.sigma_theta] for t in tags]
 
-            # Target position with uncertainties extraction
-            # target_x, sigma_target_x, target_y, sigma_target_y = self.intersect(slopes, sigma_slopes, intercepts, sigma_intercepts)
-            target_x, sigma_target_x, target_y, sigma_target_y = self.least_square_estimation(slopes, sigma_slopes, intercepts, sigma_intercepts)
+        # Target position with uncertainties extraction
+        p, cov_matrix = intersect_bearings(robots)
+        if p is None:
+            return
 
-            # Once the plane position of the target has been computed its height estimation will be carried out
-            if target_x != None:
-                # z-coordinate estimation considering the vertical fov is 67 degrees. At a value of target_height of 1 corresponds 67 degrees. For 0 is 0 degrees.
+        # Once the plane position of the target has been computed its height estimation will be carried out
+        target_z, sigma_target_z = estimate_height(p, robots, [t.target_height for t in tags])
 
-                squared_sum_sigma = 0                
+        # Composition and publishing of target estimate
+        message = PoseWithCovarianceStamped()
+        message.header.stamp = rospy.Time.now()
+        message.header.frame_id = 'world'
+        message.pose.pose.position.x = p[0]
+        message.pose.pose.position.y = p[1]
+        message.pose.pose.position.z = target_z
+        message.pose.pose.orientation.w = 1
 
-                for i, tag in enumerate(self.robot_tags):
-                    # Plane distance from robot and target
-                    distance = np.sqrt((tag.x - target_x)**2 + (tag.y - target_y)**2)
-                    # Vertical angle computation proportional to target_height value
-                    vertical_angle = tag.target_height * VERTICAL_TILT
-                    # Direct consequence from the definition of tangent
-                    quotes.append(np.tan(vertical_angle) * distance)
+        covariance = np.zeros((6, 6))
+        covariance[:2, :2] = cov_matrix
+        covariance[2, 2] = sigma_target_z**2
+        message.pose.covariance = covariance.flatten().tolist()
 
-                    # Uncertainty computation via law of propagation of error
-                    sigma_distance = np.sqrt((2 * (tag.x - target_x) * self.tag.sigma_x)**2 + (2 * (tag.y - target_y) * self.tag.sigma_y)**2)
-                    sigma_vertical_angle = VERTICAL_TILT * 0.001
-                    sigma_quotes = np.sqrt((np.tan(vertical_angle) * sigma_distance)**2 + (distance / np.cos(vertical_angle)**2 * np.pi / 3 * sigma_vertical_angle)**2)
-                    squared_sum_sigma = squared_sum_sigma + sigma_quotes**2
-                
-                # It takes the mean of all the computed values
-                target_z = np.mean(np.array(quotes))
-                sigma_target_z = np.sqrt(squared_sum_sigma) / len(quotes)
+        self.pub_target.publish(message)
 
-                # Composition and publishing of target estimate
-                message = Pose()
-                message.position.x = target_x
-                message.position.y = target_y
-                message.position.z = target_z
-                message.orientation.x = sigma_target_x
-                message.orientation.y = sigma_target_y
-                message.orientation.z = sigma_target_z
-
-                try:
-                    self.pub_target.publish(message)
-                # Sometimes it raises an exception when publishing the first message, i catch the exception since it has no effects on the program execution
-                except rospy.exceptions.ROSException as e:
-                    rospy.loginfo(str(e))
-        
 
 if __name__ == '__main__':
 
@@ -265,7 +116,7 @@ if __name__ == '__main__':
 
     # Class initialization
     target_estimator = TargetEstimator(namespace)
-    
+
     # Rospy rate of node imposition
     rate = rospy.Rate(rate_val)
 
@@ -277,5 +128,3 @@ if __name__ == '__main__':
             rate.sleep()
     except rospy.ROSInterruptException:
         rospy.loginfo("Program shutdown: Target estimator node interrupted")
-    except rospy.ROSInternalException:
-        rospy.loginfo("Target estimator node interrupted")

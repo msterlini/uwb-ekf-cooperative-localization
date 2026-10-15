@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import rospy
 from geometry_msgs.msg import Twist, Point, Pose
 
@@ -29,16 +30,16 @@ class MotionPlanner:
 
         # Topic to publish control input
         self.pub = rospy.Publisher("cmd_vel", Twist, queue_size=1)
-        rospy.loginfo(f">>>> Publishing velocity to local /cmd_vel topic =====")
+        rospy.loginfo(">>>> Publishing velocity to local /cmd_vel topic =====")
 
         # Topic to get target position of detected blob
         self.sub = rospy.Subscriber("target/point_blob", Point, self.blob_callback)
-        rospy.loginfo(f"<<<< Subscribed to local target/point_blob topic =====")
+        rospy.loginfo("<<<< Subscribed to local target/point_blob topic =====")
 
         # Topic to receive switch state input from localization module to start the movement
         self.init_sub = rospy.Subscriber("init_move", Pose, self.init_callback)
-        rospy.loginfo(f"<<<< Subscribed to local init_move topic =====")
-    
+        rospy.loginfo("<<<< Subscribed to local init_move topic =====")
+
     def init_callback(self, data):
         # In this simple callback we unregister from the init_move topic and switch the state, it will be invoked only once
         self.current_state = "SEARCH"
@@ -66,10 +67,10 @@ class MotionPlanner:
                 self.current_state = "APPROACH"
                 # I call a function that holds the control logic of a simple PID controller
                 self.move_towards_target(error)
-    
+
     def move_towards_target(self, error):
         # This functions manages the control input of the robot, it just takes as input the error
-        
+
         # Update integral and derivative values
         self.integral += error
         derivative = error - self.previous_error
@@ -83,14 +84,14 @@ class MotionPlanner:
         linear_velocity = FORWARD_SPEED if abs(error) < 0.1 else 0
         # I publish to the cmd_vel topic the linear velocity and rotational input that the gazebo plugin will manage in order to command the robot to move in the simulation
         self.publish_velocity(linear_velocity, control_input)
-    
+
     def publish_velocity(self, linear_x, angular_z):
         # The cmd_vel topic accepts messages of type Twist
         command = Twist()
         command.linear.x = linear_x
         command.angular.z = angular_z
         self.pub.publish(command)
-    
+
     # This is the finite state machine controller that will be invoked continously
     def execute_state_machine(self):
         if self.current_state == "INIT":
@@ -107,7 +108,7 @@ class MotionPlanner:
             self.pub_target.publish(message)
 
 if __name__ == "__main__":
-    
+
     # Node initialization
     rospy.init_node("motion_planner", anonymous=True)
 
@@ -132,4 +133,3 @@ if __name__ == "__main__":
 
 
 
-        
