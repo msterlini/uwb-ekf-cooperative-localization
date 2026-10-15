@@ -1,6 +1,17 @@
-# GUI run on a Linux host with X11:   xhost +local:docker && docker compose up sim
-# Headless run that records a bag:    docker compose run --rm headless
+# Desktop in the browser (any OS):   docker compose up web   ->  http://localhost:6080/vnc.html
+# Linux host with X11:               xhost +local:docker && docker compose up sim
+# Headless run that records a bag:   DURATION=300 BAG_NAME=my_run docker compose run --rm headless
 services:
+  web:
+    build: .
+    image: dist_project:noetic
+    ports:
+      - "6080:6080"
+    shm_size: 1gb
+    volumes:
+      - ./bagfiles:/catkin_ws/src/dist_project/bagfiles
+    command: vnc.sh roslaunch dist_project init.launch
+
   sim:
     build: .
     image: dist_project:noetic
@@ -18,6 +29,5 @@ services:
     volumes:
       - ./bagfiles:/catkin_ws/src/dist_project/bagfiles
     command: >
-      bash -c "xvfb-run -a -s '-screen 0 1280x1024x24'
-      timeout --signal=INT ${DURATION:-240}
-      roslaunch dist_project init.launch gui:=false record:=true bag_name:=${BAG_NAME:-run}"
+      xvfb.sh timeout --signal=INT ${DURATION:-300}
+      roslaunch dist_project init.launch gui:=false record:=true bag_name:=${BAG_NAME:-run}

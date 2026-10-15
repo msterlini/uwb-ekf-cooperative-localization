@@ -43,7 +43,7 @@
     <!-- Initial point of view of the GUI, from above the room -->
     <gui>
       <camera name="user_camera">
-        <pose>0.5 -10.5 9.5 0 0.78 1.5708</pose>
+        <pose>0.3 -6.2 10 0 1.0 1.5708</pose>
       </camera>
     </gui>
 
