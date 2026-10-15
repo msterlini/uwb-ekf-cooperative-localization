@@ -18,3 +18,8 @@ rosbag record /robot0/localization_data_topic /robot0/ground_truth/state -O few_
 ```sh
 rosbag record -e "(.*)localization_data_topic(.*)" "(.*)ground_truth/state(.*)" "(.*)target_estimate(.*)" -O total_bag.bag
 ```
+`few_tags.bag` and `more_tags.bag` were recorded with the first version of the project (localization published as a `Pose`), `total_bag.bag` with the current one. A new bag can be recorded with:
+
+```sh
+roslaunch dist_project init.launch record:=true bag_name:=my_run
+```

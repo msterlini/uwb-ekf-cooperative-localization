@@ -10,19 +10,19 @@ It also continuosly publishes static transforms for the tags, aiding in localiza
 ## Topics
 The script interacts with the following topics:
 - **Publication**: 
-  - Static transforms are published for tags to the `/tf_static` topic using `tf2_ros.StaticTransformBroadcaster`.
+  - Static transforms of all the tags are published once on the latched `/tf_static` topic using `tf2_ros.StaticTransformBroadcaster`.
 
 ## Functions
 - **`spawn_tag(x, y, id)`**: Spawns a tag at the given coordinates using a URDF model.
 - **`spawn_target(x, y, id)`**: Spawns a target at the given coordinates using an SDF model.
 - **`spawn_robot(x, y, id)`**: Spawns a robot at the given coordinates using a URDF model.
 - **`spawn_room()`**: Spawns the room model in the simulation using an SDF file.
-- **`publish_static_transform(x, y, id)`**: Publishes the static transform for a tag.
+- **`static_transform(x, y, id)`**: Creates the static transform of a tag.
 
 # `uwb_dist_sim.py`
 
 ## Key Features
-It dynamically retrieves and stores the positions of UWB anchors in the simulation environment, ti also computes the distance between the robot and each UWB anchor, adding realistic noise to the measurements, finally it publishes the calculated distances and corresponding anchor IDs to a ROS topic.
+It dynamically retrieves and stores the positions of UWB anchors in the simulation environment, it also computes the distance between the robot and each UWB anchor, adding a gaussian noise whose standard deviation grows with the distance (the same model used by the Kalman filter), finally it publishes the calculated distances and corresponding anchor IDs to a ROS topic at a fixed rate.
 
 ## Topics
 The script interacts with the following topics:
@@ -32,14 +32,13 @@ The script interacts with the following topics:
   - `uwb_data_topic`: Publishes UWB distance data using a custom message type `uwb_data`.
 
 ## Functions
-- **`get_anchor_pos()`**: Retrieves and stores the positions of UWB anchors using the `tf` package.
-- **`subscribe_data(data)`**: Callback function for the ground truth subscriber, updates the robot's position, and triggers distance calculation.
-- **`uwb_sim()`**: Calculates distances from the robot to each UWB anchor and calls the publish function.
+- **`subscribe_data(data)`**: Callback function for the ground truth subscriber, updates the robot's position.
+- **`uwb_sim(event)`**: Timer callback, calculates distances from the robot to each UWB anchor and calls the publish function.
 - **`calculate_distance(uwb_pose)`**: Computes the distance between the robot and a given UWB anchor position, adding noise to simulate measurement errors.
 - **`publish_data(ids, distances)`**: Publishes the calculated distances and anchor IDs to the `uwb_data_topic`.
 
 
-# `blob_detector.py`
+# `image_processing.py`
 
 ## Key Features
 It identifies yellow spheres in the image stream using color thresholding and blob detection, then it publishes the coordinates of detected blobs to a ROS topic and finally it visualizes detected blobs and the search window on the processed image.
@@ -69,7 +68,7 @@ The script interacts with the following topics:
 
 ## Key Features
 
-The script dynamically retrieves the positions of UWB anchors from the simulation, then it utilizes a Kalman Filter to predict and correct the robot's state, integrating odometry and UWB sensor data, it processes Odometry messages to predict the robot's movement based on velocity and angular data, it incorporates UWB sensor measurements to correct the robot's state by comparing expected distances with actual measurements, the estimated position and orientation, along with the associated uncertainties, are published to the ROS topic `localization_data_topic` and finally it notifies the motion planner to start once the Kalman Filter has stabilized its estimates.
+The script dynamically retrieves the positions of UWB anchors from the simulation, then it utilizes an Extended Kalman Filter (`src/dist_project/ekf.py`) to predict and correct the robot's state, integrating odometry and UWB sensor data, it uses the increments of the odometry pose to predict the robot's movement, it incorporates UWB sensor measurements to correct the robot's state by comparing expected distances with actual measurements (theta is not corrected while the robot is still, since the distances can't observe it), the estimated position and orientation, along with the associated uncertainties, are published to the ROS topic `localization_data_topic` and finally it notifies the motion planner to start once the Kalman Filter has stabilized its estimates.
 
 ## Topics
 The script interacts with the following topics:
@@ -78,7 +77,7 @@ The script interacts with the following topics:
   - `uwb_data_topic` (uwb_data): Receives UWB sensor measurements for correction.
 
 - **Publication:**
-  - `localization_data_topic` (Pose): Publishes the estimated robot state including position, orientation, and uncertainties.
+  - `localization_data_topic` (PoseWithCovarianceStamped): Publishes the estimated robot state with its covariance.
   - `init_move` (Pose): Signals the motion planner to start moving once the filter's estimates are reliable.
 
 ## Functions
@@ -86,8 +85,7 @@ The script interacts with the following topics:
 - **`correction_step(self, uwb_data: uwb_data)`**: Refines the robot’s state estimate using UWB data and notifies the motion planner when ready.
 - **`subscribe_odom_data(self, odom_data: Odometry)`**: Callback for Odometry data, calls `prediction_step` to update the robot’s state.
 - **`subscribe_uwb_data(self, uwb_data: uwb_data)`**: Callback for UWB data, calls `correction_step` to adjust the robot’s state estimate.
-- **`publish_data(self, pose_x, pose_y, pose_yaw)`**: Publishes the estimated robot state and uncertainties to the ROS topic.
-- **`get_anchors_pos(self)`**: Retrieves and updates UWB anchor positions from the simulation environment.
+- **`publish_data(self, stamp)`**: Publishes the estimated robot state and covariance to the ROS topic.
 
 # `motion_planner.py`
 
@@ -120,16 +118,15 @@ This script estimates the target's position and height using data from multiple 
 The script interacts with the following topics:
 - **Subscription:**
   - `target_height` (Point): Receives target height data from local sensors.
-  - `localization_data_topic` (Pose): Receives robot position and orientation data.
+  - `localization_data_topic` (PoseWithCovarianceStamped): Receives robot position, orientation and covariance.
   - `/processing_data` (robot_data): Receives tags from other robots for target estimation.
 
 - **Publication:**
   - `/processing_data` (robot_data): Publishes robot data to share with other robots.
-  - `target_estimate` (Pose): Publishes the estimated target position and height.
+  - `target_estimate` (PoseWithCovarianceStamped): Publishes the estimated target position and height with their covariance.
 
 ## Functions
 - **`target_callback(self, data)`**: Updates the target height from local sensor data.
 - **`localization_callback(self, actual_pos)`**: Updates robot position and orientation; starts publishing if target height is available.
-- **`least_square_estimation(self, slopes, sigma_slopes, y_intercepts, sigma_y_intercepts)`**: Estimates target position using least squares method.
-- **`gather_callback(self, data)`**: Processes tags from other robots and computes target position based on collaborative data.
+- **`gather_callback(self, data)`**: Processes tags from other robots and computes the target position with a weighted least squares intersection of the bearing lines (`src/dist_project/triangulation.py`).
 
