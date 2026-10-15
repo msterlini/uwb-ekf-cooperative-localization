@@ -1,6 +1,6 @@
 # Multi-robot UWB localization and cooperative target estimation
 
-[![CI](https://github.com/msterlini/Distributed_project/actions/workflows/ci.yml/badge.svg)](https://github.com/msterlini/Distributed_project/actions/workflows/ci.yml)
+[![CI](https://github.com/msterlini/uwb-ekf-cooperative-localization/actions/workflows/ci.yml/badge.svg)](https://github.com/msterlini/uwb-ekf-cooperative-localization/actions/workflows/ci.yml)
 ![ROS Noetic](https://img.shields.io/badge/ROS-Noetic-22314E)
 ![Gazebo 11](https://img.shields.io/badge/Gazebo-11-orange)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -63,7 +63,7 @@ The simulation opens Gazebo, the camera of a robot with the detected target and 
 
 ```sh
 mkdir -p ~/catkin_ws/src && cd ~/catkin_ws/src
-git clone https://github.com/msterlini/Distributed_project.git dist_project
+git clone https://github.com/msterlini/uwb-ekf-cooperative-localization.git dist_project
 cd ~/catkin_ws
 rosdep update --include-eol-distros
 rosdep install --from-paths src --ignore-src -y
@@ -77,8 +77,8 @@ roslaunch dist_project init.launch
 No ROS installation needed, only Docker:
 
 ```sh
-git clone https://github.com/msterlini/Distributed_project.git
-cd Distributed_project
+git clone https://github.com/msterlini/uwb-ekf-cooperative-localization.git
+cd uwb-ekf-cooperative-localization
 docker compose up web          # desktop in the browser: http://localhost:6080/vnc.html (any OS)
 ```
 
