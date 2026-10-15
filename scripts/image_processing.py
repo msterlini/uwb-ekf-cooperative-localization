@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Some pieces of code are taken from github of
 # Author: Tiziano Fiorenzani
 
@@ -48,12 +49,12 @@ class BlobDetector:
                 ):
 
         # Blur image to remove noise
-        if blur > 0: 
+        if blur > 0:
             image = cv2.blur(image, (blur, blur))
 
-        # Search window 
+        # Search window
         # Smaller than whole window to scan only for objects in front of the unicycle
-        if search_window is None: 
+        if search_window is None:
             search_window = [0.0, 0.0, 1.0, 1.0]
 
         # Convert image from BGR to HSV
@@ -73,29 +74,29 @@ class BlobDetector:
         if blob_params is None:
             # Set up the SimpleBlobDetector of the cv2 module with default parameters.
             params = cv2.SimpleBlobDetector_Params()
-            
+
             # Change thresholds
             params.minThreshold = 0
             params.maxThreshold = 100
-            
+
             # Filter by Area.
             params.filterByArea = True
             params.minArea = 30
             params.maxArea = 20000
-            
+
             # Filter by Circularity
             params.filterByCircularity = True
             params.minCircularity = 0.1
-            
+
             # Filter by Convexity
             params.filterByConvexity = True
             params.minConvexity = 0.5
-            
+
             # Filter by Inertia
             params.filterByInertia = True
             params.minInertiaRatio = 0.5
         else:
-            params = blob_params     
+            params = blob_params
 
         # Apply blob detection
         detector = cv2.SimpleBlobDetector_create(params)
@@ -113,11 +114,11 @@ class BlobDetector:
                        keypoints,               # CV keypoints
                        line_color=(0,0,255)     # line's color (b,g,r)
                     ):
-        
+
         # Draw detected blobs as red circles.
         # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures the size of the circle corresponds to the size of blob
         im_with_keypoints = cv2.drawKeypoints(image, keypoints, np.array([]), line_color, cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    
+
         return im_with_keypoints
 
     # Draw search window: returns the image
@@ -126,15 +127,15 @@ class BlobDetector:
                     color=(255,0,0),    # line's color
                     line=5              # line's thickness
                 ):
-        
+
         rows = image.shape[0]
         cols = image.shape[1]
-        
+
         x_min_px = int(cols * window_adim[0])
         y_min_px = int(rows * window_adim[1])
         x_max_px = int(cols * window_adim[2])
-        y_max_px = int(rows * window_adim[3])  
-        
+        y_max_px = int(rows * window_adim[3])
+
         # Draw a rectangle from top left to bottom right corner
         image = cv2.rectangle(image, (x_min_px, y_min_px), (x_max_px, y_max_px), color, line)
 
@@ -145,21 +146,21 @@ class BlobDetector:
                    dimension=0.3,      # dimension relative to frame size
                    line=2              # line's thickness
                 ):
-        
+
         rows = image.shape[0]
         cols = image.shape[1]
         size = min([rows, cols])
         center_x = int(cols / 2.0)
         center_y = int(rows / 2.0)
-        
+
         line_length = int(size * dimension)
-        
-        # Draws 2 lines in order to make the reference frame 
+
+        # Draws 2 lines in order to make the reference frame
         # X
         image = cv2.line(image, (center_x, center_y), (center_x + line_length, center_y), (0,0,255), line)
         # Y
         image = cv2.line(image, (center_x, center_y), (center_x, center_y + line_length), (0,255,0), line)
-        
+
         return image
 
     # Apply search window: returns the image
@@ -169,17 +170,17 @@ class BlobDetector:
         x_min_px = int(cols * window_adim[0])
         y_min_px = int(rows * window_adim[1])
         x_max_px = int(cols * window_adim[2])
-        y_max_px = int(rows * window_adim[3])    
-        
+        y_max_px = int(rows * window_adim[3])
+
         # Initialize the mask as a black image
         mask = np.zeros(image.shape, np.uint8)
-        
+
         # Copy the pixels from the original image corresponding to the window
-        mask[y_min_px:y_max_px, x_min_px:x_max_px] = image[y_min_px:y_max_px, x_min_px:x_max_px]   
-        
+        mask[y_min_px:y_max_px, x_min_px:x_max_px] = image[y_min_px:y_max_px, x_min_px:x_max_px]
+
         # return the mask
         return mask
-        
+
     # Apply a blur to the outside search region
     def blur_outside(self, image, blur=5, window_adim=[0.0, 0.0, 1.0, 1.0]):
         rows = image.shape[0]
@@ -187,17 +188,17 @@ class BlobDetector:
         x_min_px = int(cols * window_adim[0])
         y_min_px = int(rows * window_adim[1])
         x_max_px = int(cols * window_adim[2])
-        y_max_px = int(rows * window_adim[3])    
-        
+        y_max_px = int(rows * window_adim[3])
+
         # Initialize the mask as a black image
         mask = cv2.blur(image, (blur, blur))
-        
+
         # Copy the pixels from the original image corresponding to the window
-        mask[y_min_px:y_max_px, x_min_px:x_max_px] = image[y_min_px:y_max_px, x_min_px:x_max_px]   
-        
+        mask[y_min_px:y_max_px, x_min_px:x_max_px] = image[y_min_px:y_max_px, x_min_px:x_max_px]
+
         # return the mask
         return mask
-        
+
     # Obtain the camera relative frame coordinate of one single keypoint
     def get_blob_relative_position(self, image, keyPoint):
         rows = float(image.shape[0])
@@ -246,10 +247,10 @@ class BlobDetector:
                 y = keyPoint.pt[1]
                 s = keyPoint.size
                 print("kp %d: s = %3d   x = %3d  y= %3d" % (i, s, x, y))
-                
+
                 # Find x and y position in camera adimensional frame
                 x, y = self.get_blob_relative_position(cv_image, keyPoint)
-                
+
                 self.blob_point.x = x
                 self.blob_point.y = y
                 self.blob_pub.publish(self.blob_point)
@@ -264,7 +265,7 @@ if __name__ == '__main__':
     # Blur intensity
     blur = 5
 
-    # Minimum and maximum size of blob to detect 
+    # Minimum and maximum size of blob to detect
     min_size = 10
     max_size = 40
 
@@ -279,28 +280,28 @@ if __name__ == '__main__':
     params = cv2.SimpleBlobDetector_Params()
 
     # List of parameters to pass to CV function BlobDetector
-    
+
     # Change thresholds
     params.minThreshold = 0
     params.maxThreshold = 100
-     
+
     # Filter by Area.
     params.filterByArea = True
     params.minArea = 20
     params.maxArea = 20000
-     
+
     # Filter by Circularity
     params.filterByCircularity = True
     params.minCircularity = 0.1
-     
+
     # Filter by Convexity
     params.filterByConvexity = True
     params.minConvexity = 0.2
-     
+
     # Filter by Inertia
     params.filterByInertia = True
-    params.minInertiaRatio = 0.7   
-        
+    params.minInertiaRatio = 0.7
+
     # Node initialization
     rospy.init_node('blob_detector', anonymous=True)
 

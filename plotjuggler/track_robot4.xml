@@ -10,7 +10,7 @@
         <range top="2.587797" left="2.056384" right="2.077201" bottom="2.563514"/>
         <limitY/>
         <curve name="/robot4/ground_truth/state/pose/pose/position/[x;y]" curve_y="/robot4/ground_truth/state/pose/pose/position/y" color="#1f77b4" curve_x="/robot4/ground_truth/state/pose/pose/position/x"/>
-        <curve name="/robot4/localization_data_topic/position/[x;y]" curve_y="/robot4/localization_data_topic/position/y" color="#d62728" curve_x="/robot4/localization_data_topic/position/x"/>
+        <curve name="/robot4/localization_data_topic/pose/pose/position/[x;y]" curve_y="/robot4/localization_data_topic/pose/pose/position/y" color="#d62728" curve_x="/robot4/localization_data_topic/pose/pose/position/x"/>
        </plot>
       </DockArea>
       <DockArea name="...">
@@ -18,7 +18,7 @@
         <range top="-2.627756" left="74.296000" right="79.354000" bottom="-2.635919"/>
         <limitY/>
         <curve name="/robot4/ground_truth/state/pose/pose/orientation/yaw" color="#ff7f0e"/>
-        <curve name="/robot4/localization_data_topic/orientation/z" color="#f14cc1"/>
+        <curve name="/robot4/localization_data_topic/pose/pose/orientation/yaw" color="#f14cc1"/>
        </plot>
       </DockArea>
      </DockSplitter>

@@ -1,17 +1,53 @@
-import rosbag
-import matplotlib.pyplot as plt
+import csv
+import os
+import sys
+
+import matplotlib
 import numpy as np
+import rosbag
 import tf.transformations
+
+# Without a display the figures are saved in the plots folder instead of being shown
+SAVE = '--save' in sys.argv or not os.environ.get('DISPLAY')
+if SAVE:
+    matplotlib.use('Agg')
+import matplotlib.pyplot as plt  # noqa: E402
+
+PACKAGE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
+
+# Height of the center of the yellow sphere once the target lies on the floor
+TARGET_Z = 0.8
+
+
+def read_coordinates(name):
+    with open(os.path.join(PACKAGE_DIR, 'coordinates', name)) as f:
+        return np.array([[float(x) for x in row] for row in csv.reader(f) if row])
+
+
+def yaw(q):
+    (roll, pitch, theta) = tf.transformations.euler_from_quaternion([q.x, q.y, q.z, q.w])
+    return theta
+
+
+def show(name=None):
+    if SAVE:
+        if name is not None:
+            plt.savefig(os.path.join(PACKAGE_DIR, 'plots', name + '.png'), dpi=120, bbox_inches='tight')
+        plt.close()
+    else:
+        plt.show()
 
 
 if __name__ == "__main__":
 
-    # Path of the rosbag file to extract data from
-    # In order to take all the necessary data I edit this line when necessary
-    bagfile = '/home/marco/shared/working_dir/catkin_ws/src/dist_project/bagfiles/total_bag.bag'
+    # Path of the rosbag file to extract data from, total_bag.bag by default
+    args = [a for a in sys.argv[1:] if not a.startswith('--')]
+    bagfile = args[0] if args else os.path.join(PACKAGE_DIR, 'bagfiles', 'total_bag.bag')
 
-    # Number of robots of the simulation
-    n_robots = 5
+    # Positions of tags and target and number of robots of the simulation taken from the csv files
+    tags = read_coordinates('tag_coordinates.csv')
+    target_gt = np.append(read_coordinates('target_coordinates.csv')[0], TARGET_Z)
+    n_robots = len(read_coordinates('robot_coordinates.csv'))
 
     # Lists of total data
     gt = []
@@ -20,214 +56,107 @@ if __name__ == "__main__":
     target = []
     target_std = []
 
-    # Lists with topics names with respect to the robot
-    gt_topics = []
-    loc_topics = []
-    target_topics = []
-
-    # Topic list creation
-    for i in range(n_robots):
-        id = "robot" + str(i)
-        gt_topics.append("/" + id + "/ground_truth/state")
-        loc_topics.append("/" + id + "/localization_data_topic")
-        target_topics.append("/" + id + "/target_estimate")
-
-    # Ground truth data extraction
     with rosbag.Bag(bagfile, 'r') as bag:
         for i in range(n_robots):
+            id = "/robot" + str(i)
+
+            # Ground truth data extraction
             tmp = []
-            for topic, msg, t in bag.read_messages(topics=gt_topics[i]):
-                x = msg.pose.pose.position.x
-                y = msg.pose.pose.position.y
-                explicit_quat = [
-                    msg.pose.pose.orientation.x,
-                    msg.pose.pose.orientation.y,
-                    msg.pose.pose.orientation.z,
-                    msg.pose.pose.orientation.w
-                ]
-                (roll, pitch, theta) = tf.transformations.euler_from_quaternion(explicit_quat)
-                tmp.append([t.to_sec(), x, y, theta])
+            for topic, msg, t in bag.read_messages(topics=[id + "/ground_truth/state"]):
+                pose = msg.pose.pose
+                tmp.append([t.to_sec(), pose.position.x, pose.position.y, yaw(pose.orientation)])
             gt.append(np.array(tmp))
 
-    gt = np.array(gt)
-
-    # Localization data extraction
-    with rosbag.Bag(bagfile, 'r') as bag:
-        for i in range(n_robots):
+            # Localization data extraction
             tmp1 = []
             tmp2 = []
-            for topic, msg, t in bag.read_messages(topics=loc_topics[i]):
-                x = msg.position.x
-                y = msg.position.y
-                theta = msg.orientation.z
-                sigma_x = msg.orientation.x
-                sigma_y = msg.orientation.y
-                sigma_theta = msg.orientation.w
-                tmp1.append([t.to_sec(), x, y, theta])
-                tmp2.append([t.to_sec(), sigma_x, sigma_y, sigma_theta])
+            for topic, msg, t in bag.read_messages(topics=[id + "/localization_data_topic"]):
+                pose = msg.pose.pose
+                cov = np.reshape(msg.pose.covariance, (6, 6))
+                tmp1.append([t.to_sec(), pose.position.x, pose.position.y, yaw(pose.orientation)])
+                tmp2.append([t.to_sec(), np.sqrt(cov[0, 0]), np.sqrt(cov[1, 1]), np.sqrt(cov[5, 5])])
             loc.append(np.array(tmp1))
             loc_std.append(np.array(tmp2))
 
-    loc = np.array(loc)
-    loc_std = np.array(loc_std)
-
-    # Target estimate data extraction
-    with rosbag.Bag(bagfile, 'r') as bag:
-        for i in range(n_robots):
+            # Target estimate data extraction
             tmp1 = []
             tmp2 = []
-            for topic, msg, t in bag.read_messages(topics=target_topics[i]):
-                x = msg.position.x
-                y = msg.position.y
-                z = msg.position.z
-                sigma_x = msg.orientation.x
-                sigma_y = msg.orientation.y
-                sigma_z = msg.orientation.z
-                tmp1.append([t.to_sec(), x, y, z])
-                tmp2.append([t.to_sec(), sigma_x, sigma_y, sigma_z])
-            target.append(np.array(tmp1))
-            target_std.append(np.array(tmp2))
+            for topic, msg, t in bag.read_messages(topics=[id + "/target_estimate"]):
+                pose = msg.pose.pose
+                cov = np.reshape(msg.pose.covariance, (6, 6))
+                tmp1.append([t.to_sec(), pose.position.x, pose.position.y, pose.position.z])
+                tmp2.append([t.to_sec(), np.sqrt(cov[0, 0]), np.sqrt(cov[1, 1]), np.sqrt(cov[2, 2])])
+            target.append(np.array(tmp1).reshape(-1, 4))
+            target_std.append(np.array(tmp2).reshape(-1, 4))
 
-    
-    target = np.array(target)
-    target_std = np.array(target_std)
+    # The time starts from the first localization message
+    t0 = min(loc[i][0, 0] for i in range(n_robots))
 
-    # List of tag position
-    tags = np.array([
-        [-3,-3],
-        [-3,3],
-        [0,-3],
-        [0,3],
-        [3,-3],
-        [3,3]]
-    )
+    # Seconds to wait for the filter to converge before computing the errors
+    delay = 10
+
+    # Localization errors computed interpolating the ground truth at the time of each estimate
+    errors = []
+    for i in range(n_robots):
+        gt_x = np.interp(loc[i][:, 0], gt[i][:, 0], gt[i][:, 1])
+        gt_y = np.interp(loc[i][:, 0], gt[i][:, 0], gt[i][:, 2])
+        gt_theta = np.interp(loc[i][:, 0], gt[i][:, 0], np.unwrap(gt[i][:, 3]))
+        error = np.column_stack((loc[i][:, 1] - gt_x, loc[i][:, 2] - gt_y, loc[i][:, 3] - gt_theta))
+        error[:, 2] = (error[:, 2] + np.pi) % (2 * np.pi) - np.pi
+        errors.append(error[loc[i][:, 0] > loc[i][0, 0] + delay])
 
     # Data plotting
     plt.figure()
     for i in range(n_robots):
-        plt.plot(loc[i][60:, 1], loc[i][60:, 2], label='Estimate robot ' + str(i))
-        plt.plot(gt[i][60:, 1], gt[i][60:, 2], label='G-T robot ' + str(i))
-    plt.plot(tags[:,0], tags[:,1], label='UWB tags', markersize=12, linestyle='None', marker='*', color='blue') 
+        line, = plt.plot(loc[i][:, 1], loc[i][:, 2], label='Estimate robot ' + str(i))
+        plt.plot(gt[i][:, 1], gt[i][:, 2], '--', color=line.get_color(), alpha=0.6)
+    plt.plot(tags[:, 0], tags[:, 1], label='UWB tags', markersize=12, linestyle='None', marker='*', color='blue')
+    plt.plot(target_gt[0], target_gt[1], label='Target', markersize=12, linestyle='None', marker='o', color='gold')
     plt.xlabel('X [m]')
     plt.ylabel('Y [m]')
-    plt.title('Multiple localization')
-    plt.legend()
-    plt.show()
+    plt.title('Multiple localization (dashed: ground truth)')
+    plt.axis('equal')
+    plt.legend(fontsize='small')
+    show('multiple')
 
-    plt.figure()
+    for k, coordinate in enumerate(['x', 'y', 'z']):
+        plt.figure()
+        for i in range(n_robots):
+            if len(target[i]):
+                plt.plot(target[i][:, 0] - t0, target[i][:, k + 1], label='Estimated ' + coordinate + ' robot ' + str(i))
+        plt.axhline(target_gt[k], color='black', linestyle='--', label='Ground truth')
+        plt.xlabel('Time [s]')
+        plt.ylabel(coordinate.upper() + ' [m]')
+        plt.title('Target ' + coordinate + ' coordinate estimation')
+        plt.legend(fontsize='small')
+        show(coordinate + '_estimate')
+
+    if not SAVE:
+        for i in range(n_robots):
+            for k, (name, unit) in enumerate([('X', 'm'), ('Y', 'm'), ('Theta', 'rad')]):
+                plt.figure()
+                plt.hist(errors[i][:, k], bins=120)
+                plt.xlabel('Error [' + unit + ']')
+                plt.ylabel('Frequency')
+                plt.title(name + ' localization error in robot ' + str(i))
+                show()
+
+    # Summary table in markdown
+    print('| Robot | RMSE x [m] | RMSE y [m] | RMSE theta [deg] | Mean predicted std x, y [m] | Final target error [m] |')
+    print('|---|---|---|---|---|---|')
     for i in range(n_robots):
-        plt.plot(target[i][:, 0], target[i][:, 1], label='Estimated x robot ' + str(i))
-        plt.plot(target[i][:, 0], target[i][:, 0]*0 + 1, markersize=0)
-    plt.xlabel('X [m]')
-    plt.ylabel('Time [s]')
-    plt.title('Target x coordinate estimation')
-    plt.legend()
-    plt.show()
+        rmse = np.sqrt(np.mean(errors[i]**2, axis=0))
+        start = loc_std[i][:, 0] > loc_std[i][0, 0] + delay
+        predicted = np.mean(loc_std[i][start, 1:3], axis=0)
+        if len(target[i]):
+            target_error = '%.3f' % np.linalg.norm(target[i][-1, 1:4] - target_gt)
+        else:
+            target_error = '-'
+        print('| %d | %.3f | %.3f | %.2f | %.3f, %.3f | %s |'
+              % (i, rmse[0], rmse[1], np.degrees(rmse[2]), predicted[0], predicted[1], target_error))
 
-    plt.figure()
+    # Final target estimate with uncertainty
     for i in range(n_robots):
-        plt.plot(target[i][:, 0], target[i][:, 2], label='Estimated y robot ' + str(i))
-        plt.plot(target[i][:, 0], target[i][:, 0]*0 + 2, markersize=0)
-    plt.xlabel('Y [m]')
-    plt.ylabel('Time [s]')
-    plt.title('Target y coordinate estimation')
-    plt.legend()
-    plt.show()
-
-    plt.figure()
-    for i in range(n_robots):
-        plt.plot(target[i][:, 0], target[i][:, 3], label='Estimated z robot ' + str(i))
-        plt.plot(target[i][:, 0], target[i][:, 0]*0 + 0.85, markersize=0)
-    plt.xlabel('Z [m]')
-    plt.ylabel('Time [s]')
-    plt.title('Target z coordinate estimation')
-    plt.legend()
-    plt.show()
-
-    for i in range(n_robots):
-        start = len(gt[i]) - len(loc[i])
-        delay = 70
-        plt.figure()
-        plt.hist(loc[i][delay:,1] - gt[i][start + delay:,1], bins=120)
-        plt.xlabel('Error [m]')
-        plt.ylabel('Frequency')
-        plt.title('X localization error in robot ' + str(i))
-        plt.show()
-
-        plt.figure()
-        plt.hist(loc[i][delay:,2] - gt[i][start + delay:,2], bins=120)
-        plt.xlabel('Error [m]')
-        plt.ylabel('Frequency')
-        plt.title('Y localization error in robot ' + str(i))
-        plt.show()
-
-        plt.figure()
-        plt.hist(loc[i][delay:,3] - gt[i][start + delay:,3], bins=120)
-        plt.xlabel('Error [rad]')
-        plt.ylabel('Frequency')
-        plt.title('Theta localization error in robot ' + str(i))
-        plt.show()
-
-        plt.figure()
-        plt.hist(target[i][:,1] - 1, bins=120)
-        plt.xlabel('Error [m]')
-        plt.ylabel('Frequency')
-        plt.title('X localization error target of robot ' + str(i))
-        plt.show()
-
-        plt.figure()
-        plt.hist(target[i][:,2] - 2, bins=120)
-        plt.xlabel('Error [m]')
-        plt.ylabel('Frequency')
-        plt.title('Y localization error target of robot ' + str(i))
-        plt.show()
-
-        plt.figure()
-        plt.hist(target[i][:,3] - 0.85, bins=120)
-        plt.xlabel('Error [m]')
-        plt.ylabel('Frequency')
-        plt.title('Z localization error target of robot ' + str(i))
-        plt.show()
-
-        # Computation of target coordinate mean
-        x_mean = np.mean(target[i][:,1])
-        y_mean = np.mean(target[i][:,2])
-        z_mean = np.mean(target[i][:,3])
-
-        # Computation of target coordinate std
-        x_std = np.std(target[i][:,1])
-        y_std = np.std(target[i][:,2])
-        z_std = np.std(target[i][:,3])
-
-        # Extraction of expected target coordinate std
-        expected_x_std = np.mean(target_std[i][:,1])
-        expected_y_std = np.mean(target_std[i][:,2])
-        expected_z_std = np.mean(target_std[i][:,3])
-
-        # Extraction of expected state estimate std
-        loc_x_std = np.mean(loc_std[i][delay:,1])
-        loc_y_std = np.mean(loc_std[i][delay:,2])
-        loc_theta_std = np.mean(loc_std[i][delay:,3])
-
-        # Computation of actual state estimate std
-        real_loc_x_std = np.mean(np.std(gt[i][delay + start:,1] - loc[i][delay:,1]))
-        real_loc_y_std = np.mean(np.std(gt[i][delay + start:,2] - loc[i][delay:,2]))
-        real_loc_theta_std = np.mean(np.std(gt[i][delay + start:,3] - loc[i][delay:,3]))
-
-        print('Robot ' + str(i) + ":")
-        print("X coordinate: " + str(x_mean) + " +- " + str(x_std) + ". Expected std: " + str(expected_x_std))
-        print("Y coordinate: " + str(y_mean) + " +- " + str(y_std) + ". Expected std: " + str(expected_y_std))
-        print("Z coordinate: " + str(z_mean) + " +- " + str(z_std) + ". Expected std: " + str(expected_z_std))
-        print("")
-
-        print('Estimated standard deviations:')
-        print("sigma_x: " + str(loc_x_std))
-        print("sigma_y: " + str(loc_x_std))
-        print("sigma_theta: " + str(loc_theta_std))
-        print("")
-
-        print('Actual standard deviations:')
-        print("sigma_x: " + str(real_loc_x_std))
-        print("sigma_y: " + str(real_loc_x_std))
-        print("sigma_theta: " + str(real_loc_theta_std))
-        print("")
+        if len(target[i]):
+            print('Robot ' + str(i) + ' target estimate: ' + str(np.round(target[i][-1, 1:4], 3))
+                  + ' +- ' + str(np.round(target_std[i][-1, 1:4], 3)) + ', ground truth: ' + str(target_gt))

@@ -1,13 +1,15 @@
-import rosbag
+import os
+import sys
+
 import matplotlib.pyplot as plt
 import numpy as np
+import rosbag
 
 if __name__ == "__main__":
 
-    # Path of the rosbag file to extract data from
-    # In order to take all the necessary data I edit this line when necessary
-    bagfile = '/home/marco/shared/working_dir/catkin_ws/src/dist_project/bagfiles/few_tags.bag'
-    # bagfile = '/home/marco/shared/working_dir/catkin_ws/src/dist_project/bagfiles/more_tags.bag'
+    # Path of the rosbag file to extract data from, few_tags.bag by default
+    bagfiles_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'bagfiles')
+    bagfile = sys.argv[1] if len(sys.argv) > 1 else os.path.join(bagfiles_dir, 'few_tags.bag')
 
     # I edit this lane when necessary to extract data from a particular topic
     topic1 = "/robot0/localization_data_topic"
@@ -21,8 +23,10 @@ if __name__ == "__main__":
     # Packing of data iterating all messages stored
     with rosbag.Bag(bagfile, 'r') as bag:
         for topic, msg, t in bag.read_messages(topics=[topic1]):
-            x = msg.position.x
-            y = msg.position.y
+            # The old bag files store a Pose, the new ones a PoseWithCovarianceStamped
+            pose = msg.pose.pose if hasattr(msg, 'pose') else msg
+            x = pose.position.x
+            y = pose.position.y
             loc_data.append([x, y])
 
     with rosbag.Bag(bagfile, 'r') as bag:
@@ -43,7 +47,7 @@ if __name__ == "__main__":
         [4,3],
         [4,-3]]
     )
-    
+
     # Data plotting
     plt.figure()
     plt.plot(loc_data[20:,0], loc_data[20:,1], label='Estimated position')
