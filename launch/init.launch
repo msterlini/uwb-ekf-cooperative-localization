@@ -1,11 +1,21 @@
 <?xml version="1.0"?>
 <launch>
 
+  <!-- gui:=false STARTS GAZEBO WITHOUT GRAPHICAL INTERFACES, record:=true SAVES A BAG FILE IN bagfiles/ -->
+  <arg name="gui" default="true" />
+  <arg name="record" default="false" />
+  <arg name="bag_name" default="run" />
+  <!-- overview_camera:=true ADDS A FIXED CAMERA ABOVE THE ROOM PUBLISHING ON /overview_camera/image_raw -->
+  <arg name="overview_camera" default="false" />
+
   <!-- PARAMETER SECTION -->
   <!--==================================================================-->
+  <!-- ALL THE NODES USE THE GAZEBO SIMULATION TIME -->
+  <param name="/use_sim_time" type="bool" value="true" />
+
+  <!--==================================================================-->
   <!-- SPAWN TAGS PARAMETERS DEFINITION -->
-  <param name="tag_height" type="int" value="3" />
-  <param name="tag_distance_rate" type="int" value="100" />
+  <param name="tag_height" type="double" value="3" />
   <param name="tag_coordinate_file" type="str" value="$(find dist_project)/coordinates/tag_coordinates.csv" />
   <param name="tag_urdf_file" type="str" value="$(find dist_project)/urdf/tag.urdf" />
 
@@ -23,12 +33,26 @@
 
   <!-- UWB DISTANCE SIMULATOR NODE PARAMETERS -->
   <param name="initialization_time" type="int" value="5" />
+  <param name="uwb_rate" type="double" value="10" />
+  <!-- NOISE STANDARD DEVIATION = FLOOR + REL * DISTANCE, USED ALSO BY THE KALMAN FILTER -->
+  <param name="uwb_range_rel_std" type="double" value="0.015" />
+  <param name="uwb_range_floor_std" type="double" value="0.05" />
 
   <!-- MOTION PLANNER NODE PARAMETERS -->
   <param name="motion_planner_rate" type="int" value="1" />
 
   <!-- KALMAN LOCALIZATION NODE PARAMETERS -->
-  <param name="localization_rate" type="int" value="10" />
+  <param name="odom_rate" type="double" value="10" />
+  <!-- ODOMETRY NOISE STANDARD DEVIATION = CONSTANT + REL * VALUE READ -->
+  <param name="ekf_v_std" type="double" value="0.05" />
+  <param name="ekf_v_std_rel" type="double" value="0.1" />
+  <param name="ekf_w_std" type="double" value="0.05" />
+  <param name="ekf_w_std_rel" type="double" value="0.1" />
+  <!-- SPEED BELOW WHICH THE ROBOT IS CONSIDERED STILL -->
+  <param name="ekf_stationary_speed" type="double" value="0.02" />
+  <!-- NUMBER OF UWB CALLBACKS TO WAIT BEFORE ESTIMATING THE INITIAL ORIENTATION -->
+  <param name="ekf_warmup_updates" type="int" value="30" />
+  <param name="ekf_heading_window" type="int" value="20" />
 
   <!-- TARGET ESTIMATOR NODE PARAMETERS -->
   <param name="target_estimator_rate" type="int" value="10" />
@@ -37,13 +61,21 @@
   <!--==================================================================-->
 
   <!-- INITIALIZE GAZEBO NODE -->
-  <node pkg="gazebo_ros" type="gazebo" name="gazebo" />
+  <node pkg="gazebo_ros" type="gzserver" name="gazebo" args="$(find dist_project)/worlds/room.world" />
+  <node if="$(arg gui)" pkg="gazebo_ros" type="gzclient" name="gazebo_gui" />
   <node pkg="dist_project" type="gazebo_init.py" name="gazebo_init" />
 
+  <node if="$(arg overview_camera)" pkg="gazebo_ros" type="spawn_model" name="spawn_overview_camera"
+        args="-sdf -file $(find dist_project)/models/overview_camera/model.sdf -model overview_camera" />
+
   <!-- INITIALIZE CAMERA POINT OF VIEW NODE -->
-  <node pkg="rqt_image_view" type="rqt_image_view" name="camera_blob_viewer" />  
+  <node if="$(arg gui)" pkg="rqt_image_view" type="rqt_image_view" name="camera_blob_viewer" />  
 
   <!-- INITIALIZE PLOT MANAGER NODE -->
-  <node pkg="plotjuggler" type="plotjuggler" name="plotjuggler" />
+  <node if="$(arg gui)" pkg="plotjuggler" type="plotjuggler" name="plotjuggler" />
+
+  <!-- RECORDING OF LOCALIZATION, GROUND TRUTH AND TARGET ESTIMATE TOPICS -->
+  <node if="$(arg record)" pkg="rosbag" type="record" name="recorder"
+        args="-e '.*/(localization_data_topic|ground_truth/state|target_estimate)' -O $(find dist_project)/bagfiles/$(arg bag_name).bag" />
 
 </launch>
