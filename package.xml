@@ -12,7 +12,7 @@
   <author>Marco Sterlini</author>
   <license>MIT</license>
 
-  <url type="repository">https://github.com/msterlini/Distributed_project</url>
+  <url type="repository">https://github.com/msterlini/uwb-ekf-cooperative-localization</url>
 
   <buildtool_depend>catkin</buildtool_depend>
 
