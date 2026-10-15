@@ -57,7 +57,7 @@ All the robots reach the target. The cooperative estimate is **(0.965, 1.952, 0.
 
 ## Running the simulation
 
-The simulation opens Gazebo, the camera of a robot with the detected target and PlotJuggler (layouts in [`plotjuggler/`](plotjuggler)). It can run natively, in Docker or in the browser.
+The simulation opens Gazebo, the camera of a robot with the detected target and PlotJuggler (layouts in [`plotjuggler/`](plotjuggler)). It can run natively or in Docker, with the windows on the desktop or in the browser.
 
 ### Locally with ROS Noetic (Ubuntu 20.04)
 
@@ -88,18 +88,6 @@ On a Linux host with an X server the windows can also open directly on the deskt
 xhost +local:docker
 docker compose up sim
 ```
-
-### In the browser with GitHub Codespaces
-
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/msterlini/Distributed_project)
-
-Once the codespace is built, run in its terminal:
-
-```sh
-vnc.sh roslaunch dist_project init.launch
-```
-
-and open the forwarded port 6080 (`/vnc.html`). Gazebo renders on the CPU there, so the simulation runs slower than real time.
 
 ### Headless runs and results
 
