@@ -1,51 +1,102 @@
-# Distributed project
+# Multi-robot UWB localization and cooperative target estimation
 
-The aim of this project was to develop a environment in ROS and Gazebo for the deployment of a indoor scenario with many unicycles that could be used as a starting basis for future projects.
+[![CI](https://github.com/msterlini/Distributed_project/actions/workflows/ci.yml/badge.svg)](https://github.com/msterlini/Distributed_project/actions/workflows/ci.yml)
+![ROS Noetic](https://img.shields.io/badge/ROS-Noetic-22314E)
+![Gazebo 11](https://img.shields.io/badge/Gazebo-11-orange)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-In particular in order to address the topics of the course this project saw the dynamic deployment of a number of unicycles and UWB tags, the problems that were solved regard the ego-localization and the collaborative estimation of the position of a target in the 3-D environment.
+A ROS/Gazebo simulation of a team of unicycle robots in an indoor room. Each robot localizes itself with an **Extended Kalman Filter** that fuses wheel odometry with **UWB ranges** to anchors on the ceiling, then searches a target with its camera. The robots that reach the target share their pose and uncertainty, and every robot fuses them into a **3-D estimate of the target position**.
 
-## Project structure
+Project of the course *Distributed Estimation for Robots and Vehicles* (2024). The full report, *Distributed unicycle system for the estimation of the 3D position of a target*, is in [`docs/report.pdf`](docs/report.pdf).
 
-This project follows the catkin workspace folder hierarchy as recommended by ROS. For more information on the catkin workspace structure, please refer to the [ROS wiki](http://wiki.ros.org/catkin/workspaces).
+## How it works
 
-In particular the main folders where most of the material lie are the following, in each folder there will be further information:
-
-- `bagfiles/`: Where simulation bagfiles are stored.
-- `coordinates/`: Here there are the csv files containing the initial spawn coordinates of the UWB tags, robots and targets. These files can be edited to dynamically change the number and position of the entities of the simulation.
-- `launch/`: ROS launch files to initialize the simulation.
-- `mesh/`: Contains the stl files used to render the robot in the Gazebo simulation.
-- `models/`: Contains the models folders created in Gazebo used to spawn the room and the target in the simulation.
-- `msg/`: Custom ROS messages definition.
-- `plotjuggler/`: Contains the settings file for the third party node "plotjuggler" used to better plot data from the topics both from bag file and in real time.
-- `plots/`: Contains the scripts used to create the plots that have been used in the final report.
-- `scripts/`: Here are all the executable python scripts, they will manage the setup of the environment and all the logic of the ROS nodes
-- `urdf/`: URDF files for robot description. 
-
-
-## Requirements
-
-- Docker installed
-
-## Installation 
-There are many requirements necessary, in order to simplify the execution the whole project has been developed inside a Docker container in order to guarantee compatibility along all platforms. 
-
-This github repository must be cloned into a folder on the user computer with:
-```sh
-git clone https://github.com/Marcosterlo/Distributed_project.git
+```mermaid
+flowchart LR
+    subgraph robot_i["robot i (one namespace per robot)"]
+        GZ[Gazebo<br/>odometry, camera, ground truth] -->|odom| KF[kalman_localization<br/>EKF]
+        GZ -->|ground_truth| UWB[uwb_dist_sim<br/>noisy ranges]
+        UWB -->|uwb_data_topic| KF
+        GZ -->|camera| IP[image_processing<br/>yellow blob detection]
+        IP -->|target/point_blob| MP[motion_planner<br/>search, approach, stop]
+        KF -->|init_move| MP
+        MP -->|cmd_vel| GZ
+        MP -->|target_height| TE[target_estimator]
+        KF -->|localization_data_topic| TE
+    end
+    TE <-->|/processing_data<br/>pose + uncertainty of every robot| OTHERS[other robots]
+    TE -->|target_estimate| OUT((x, y, z ± σ))
 ```
 
+**Ego-localization.** The state of each robot is $(x, y, \theta)$. The prediction step uses the unicycle model driven by the odometry increments; the correction step uses the distances $d_j = \lVert p - a_j \rVert$ to the UWB anchors $a_j$, whose noise grows with the distance ($\sigma_j = \sigma_0 + k\, d_j$). The ranges carry no information on $\theta$ while the robot is still, so the heading is first taken from the travelled direction and then corrected only while the robot moves.
 
-To run the Docker container for this project, use the following command. You will need to replace `/path/to/your/local/folder` with the local folder where this GitHub repository has been cloned to.
+**Target estimation.** A robot that reached the target is stopped and points at it, so the target lies on its bearing line $-\sin\theta_i\, x + \cos\theta_i\, y = -\sin\theta_i\, x_i + \cos\theta_i\, y_i$. The planar position is the weighted least-squares intersection of the lines of all the robots, each weighted with the uncertainty of the robot pose propagated to the line; the height comes from the elevation at which every camera sees the target.
+
+## Results
+
+Headless run of 5 robots and 6 anchors, evaluated against the Gazebo ground truth with [`plots/scripts/uncertainty.py`](plots/scripts/uncertainty.py):
+
+| Robot | RMSE x [m] | RMSE y [m] | RMSE theta [deg] | Mean predicted std x, y [m] |
+|---|---|---|---|---|
+| 0 | 0.043 | 0.042 | 10.85 | 0.020, 0.021 |
+| 1 | 0.016 | 0.021 | 8.26 | 0.021, 0.016 |
+| 2 | 0.013 | 0.015 | 2.51 | 0.007, 0.021 |
+| 3 | 0.036 | 0.038 | 19.54 | 0.019, 0.023 |
+| 4 | 0.022 | 0.020 | 5.70 | 0.026, 0.015 |
+
+The position errors are a few centimetres and consistent with the covariance predicted by the filter. The heading error stays constant after the initial estimate from the travelled direction, without drifting. With the two robots that reached the target, the cooperative estimate was (0.91, 1.74, 0.83) m against the true (1.00, 2.00, 0.80) m.
+
+## Quick start
+
+The only requirement is Docker. On Linux with an X server:
 
 ```sh
-sudo docker run --name ubuntu_ros -v /tmp/.X11-unix/:/tmp/.X11-unix/ -v /path/to/your/local/folder:/home/marco/shared --env="DISPLAY=$DISPLAY" --privileged --shm-size 2g --rm -i -t --user=marco --workdir=/home/marco marcosterlo/ubuntu:ros bash
+git clone https://github.com/msterlini/Distributed_project.git
+cd Distributed_project
+xhost +local:docker
+docker compose up sim
 ```
 
-## Usage
+This opens Gazebo, the camera of a robot with the detected target and PlotJuggler (layouts in [`plotjuggler/`](plotjuggler)).
 
-Once inside the docker container, in order to start the simulation run the following command:
+Headless run that records a bag in `bagfiles/` and the plots of the results:
 
 ```sh
-roslaunch dist_project init.launch
+DURATION=600 BAG_NAME=my_run docker compose run --rm headless
+docker compose run --rm sim python3 src/dist_project/plots/scripts/uncertainty.py \
+    src/dist_project/bagfiles/my_run.bag --save
 ```
-It will also open a window containing the point of view of the camera of one of the unicycles and a open source software called plotjuggler. See `plotjuggler` folder for further instructions
+
+Launch arguments of `init.launch`: `gui` (default `true`), `record`, `bag_name`, `overview_camera` (fixed camera above the room on `/overview_camera/image_raw`). All the parameters of the filter and of the sensors are in [`launch/init.launch`](launch/init.launch).
+
+### Changing the scenario
+
+The number and the positions of robots, anchors and target are read from the csv files in [`coordinates/`](coordinates): adding a line adds a robot or an anchor, no code changes needed.
+
+### Tests
+
+The estimation code is plain Python/NumPy in [`src/dist_project`](src/dist_project) and is tested without ROS:
+
+```sh
+pip install numpy pytest
+pytest
+```
+
+## Repository structure
+
+| Folder | Content |
+|---|---|
+| `scripts/` | ROS nodes, see [scripts/README.md](scripts/README.md) |
+| `src/dist_project/` | EKF, bearing-only triangulation and anchor lookup |
+| `launch/` | `init.launch` (whole simulation), `start_nodes.launch` (nodes of one robot) |
+| `coordinates/` | spawn positions of robots, anchors and target |
+| `urdf/`, `mesh/`, `models/`, `worlds/` | robot description, room, target and Gazebo world |
+| `msg/` | custom messages `uwb_data` and `robot_data` |
+| `bagfiles/` | recorded simulations |
+| `plots/` | scripts and figures of the results |
+| `plotjuggler/` | PlotJuggler layouts |
+| `test/` | unit tests |
+
+## Using it as a base
+
+The project was built to be a starting point for other course projects: the scene is generated from the csv files, every robot runs in its own namespace and the estimation code is separated from ROS. If you use it, feel free to open an issue to let me know.
