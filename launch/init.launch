@@ -71,10 +71,11 @@
         args="-sdf -file $(find dist_project)/models/overview_camera/model.sdf -model overview_camera" />
 
   <!-- INITIALIZE CAMERA POINT OF VIEW NODE -->
-  <node if="$(arg gui)" pkg="rqt_image_view" type="rqt_image_view" name="camera_blob_viewer" />  
+  <node if="$(arg gui)" pkg="rqt_image_view" type="rqt_image_view" name="camera_blob_viewer" args="/robot0/target/image_blob" />  
 
   <!-- INITIALIZE PLOT MANAGER NODE -->
-  <node if="$(eval arg('gui') and arg('plotjuggler'))" pkg="plotjuggler" type="plotjuggler" name="plotjuggler" />
+  <node if="$(eval arg('gui') and arg('plotjuggler'))" pkg="plotjuggler" type="plotjuggler" name="plotjuggler"
+        args="--nosplash --layout $(find dist_project)/plotjuggler/default.xml" />
 
   <!-- RECORDING OF LOCALIZATION, GROUND TRUTH AND TARGET ESTIMATE TOPICS -->
   <node if="$(arg record)" pkg="rosbag" type="record" name="recorder"
