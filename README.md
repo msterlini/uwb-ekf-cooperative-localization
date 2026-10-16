@@ -38,7 +38,7 @@ flowchart LR
 
 ![How it works](docs/animation.gif)
 
-*Illustration made from the recorded run: EKF localization of one robot, with the range corrections from the anchors and the 2-σ ellipse (×10), then the bearing lines of the five robots and their weighted least-squares intersection, next to the true target. Made with [Manim](https://www.manim.community/); source in [msterlini/website](https://github.com/msterlini/website/tree/main/manim).*
+*Illustration made from the recorded run: EKF localization of one robot, with the range corrections from the anchors and the 2-σ ellipse (×10), then the bearing lines of the five robots and their weighted least-squares intersection, next to the true target. Made with [Manim](https://www.manim.community/).*
 
 ## Results
 
