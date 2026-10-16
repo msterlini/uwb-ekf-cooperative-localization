@@ -3,7 +3,6 @@ FROM osrf/ros:noetic-desktop-full
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        ros-noetic-plotjuggler-ros \
         python3-pytest \
         xvfb \
         x11vnc novnc websockify fluxbox \
