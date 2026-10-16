@@ -18,6 +18,8 @@ PACKAGE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..
 
 # Height of the center of the yellow sphere once the target lies on the floor
 TARGET_Z = 0.8
+# Position std [m] below which the filter is considered converged, as in the live monitor
+CONVERGED_STD = 0.2
 
 
 def read_coordinates(name):
@@ -32,10 +34,15 @@ def yaw(q):
 
 def read_bag(path):
     # Messages of every topic as (time [s], message); rosbags reads both ROS 1 (.bag) and ROS 2 (mcap) bags
+    # The time is the one of the header, so the simulation time even if the bag was recorded with the wall clock
     messages = defaultdict(list)
     with AnyReader([Path(path)]) as reader:
         for connection, timestamp, rawdata in reader.messages():
-            messages[connection.topic].append((timestamp * 1e-9, reader.deserialize(rawdata, connection.msgtype)))
+            msg = reader.deserialize(rawdata, connection.msgtype)
+            stamp = msg.header.stamp
+            sec = stamp.sec if hasattr(stamp, 'sec') else stamp.secs
+            nanosec = stamp.nanosec if hasattr(stamp, 'nanosec') else stamp.nsecs
+            messages[connection.topic].append((sec + nanosec * 1e-9, msg))
     return messages
 
 
@@ -83,6 +90,9 @@ if __name__ == "__main__":
         for t, msg in messages[id + "/localization_data_topic"]:
             pose = msg.pose.pose
             cov = np.reshape(msg.pose.covariance, (6, 6))
+            # I skip the estimates before the first convergence, when the filter is still at its initial guess
+            if not tmp1 and np.sqrt(cov[0, 0] + cov[1, 1]) > CONVERGED_STD:
+                continue
             tmp1.append([t, pose.position.x, pose.position.y, yaw(pose.orientation)])
             tmp2.append([t, np.sqrt(cov[0, 0]), np.sqrt(cov[1, 1]), np.sqrt(cov[5, 5])])
         loc.append(np.array(tmp1))
