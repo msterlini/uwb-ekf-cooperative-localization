@@ -2,8 +2,9 @@
 <sdf version="1.6">
   <model name="overview_camera">
     <static>true</static>
-    <pose>0.3 -6.2 10 0 1.0 1.5708</pose>
     <link name="link">
+      <!-- Pose in the link, so that it doesn't depend on the pose given when the model is spawned -->
+      <pose>0.3 -6.2 10 0 1.0 1.5708</pose>
       <sensor name="overview_camera" type="camera">
         <always_on>true</always_on>
         <update_rate>5</update_rate>

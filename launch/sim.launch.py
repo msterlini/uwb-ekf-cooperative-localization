@@ -130,7 +130,7 @@ def generate_launch_description():
     ]
 
     recorder = ExecuteProcess(
-        cmd=['ros2', 'bag', 'record', '-s', 'mcap', '--storage-preset-profile', 'zstd_fast', '-o',
+        cmd=['ros2', 'bag', 'record', '--use-sim-time', '-s', 'mcap', '--storage-preset-profile', 'zstd_fast', '-o',
              PathJoinSubstitution([LaunchConfiguration('bag_dir'), LaunchConfiguration('bag_name')]),
              '--regex', '.*/(localization_data_topic|ground_truth/state|target_estimate)'],
         condition=IfCondition(record), output='log')
