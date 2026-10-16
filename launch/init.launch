@@ -71,7 +71,7 @@
         args="-sdf -file $(find dist_project)/models/overview_camera/model.sdf -model overview_camera" />
 
   <!-- INITIALIZE CAMERA POINT OF VIEW NODE -->
-  <node if="$(arg gui)" pkg="rqt_image_view" type="rqt_image_view" name="camera_blob_viewer" args="/robot0/target/image_blob" />  
+  <node if="$(arg gui)" pkg="rqt_image_view" type="rqt_image_view" name="camera_blob_viewer" args="/robot1/target/image_blob" />  
 
   <!-- INITIALIZE PLOT MANAGER NODE -->
   <node if="$(eval arg('gui') and arg('plotjuggler'))" pkg="plotjuggler" type="plotjuggler" name="plotjuggler"
