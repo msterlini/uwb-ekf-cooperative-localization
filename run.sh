@@ -1,15 +1,22 @@
 #!/usr/bin/env bash
 # Starts the simulation in Docker using the GPU of the host when there is one.
 #
-#   ./run.sh            windows on the desktop (Linux with X11 or XWayland)
-#   ./run.sh web        desktop in the browser at http://localhost:6080/vnc.html
+#   ./run.sh            windows on the desktop (Linux with X11 or XWayland, WSL2 with WSLg),
+#                       on macOS it opens the desktop in the browser
+#   ./run.sh web        desktop in the browser at http://localhost:6080/vnc.html (any OS)
 #   ./run.sh headless   no windows, records bagfiles/$BAG_NAME.bag for $DURATION seconds
 #
 # The GPU is detected automatically, GPU=nvidia|dri|none forces a choice.
 set -euo pipefail
 cd "$(dirname "$0")"
 
-service="${1:-sim}"
+# Docker Desktop on macOS has no X server nor GPU devices for the containers
+if [ "$(uname -s)" = Darwin ]; then
+    default_service=web
+else
+    default_service=sim
+fi
+service="${1:-$default_service}"
 
 detect_gpu() {
     if command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi -L >/dev/null 2>&1; then
