@@ -3,8 +3,8 @@
 
   <!-- gui:=false STARTS GAZEBO WITHOUT GRAPHICAL INTERFACES, record:=true SAVES A BAG FILE IN bagfiles/ -->
   <arg name="gui" default="true" />
-  <!-- plotjuggler:=false IF PLOTJUGGLER IS NOT INSTALLED -->
-  <arg name="plotjuggler" default="true" />
+  <!-- monitor:=false DOESN'T OPEN THE LIVE VIEW OF MAP, ESTIMATES AND ERRORS -->
+  <arg name="monitor" default="true" />
   <arg name="record" default="false" />
   <arg name="bag_name" default="run" />
   <!-- overview_camera:=true ADDS A FIXED CAMERA ABOVE THE ROOM PUBLISHING ON /overview_camera/image_raw -->
@@ -76,9 +76,8 @@
   <!-- INITIALIZE CAMERA POINT OF VIEW NODE -->
   <node if="$(arg gui)" pkg="rqt_image_view" type="rqt_image_view" name="camera_blob_viewer" args="/robot1/target/image_blob" />  
 
-  <!-- INITIALIZE PLOT MANAGER NODE -->
-  <node if="$(eval arg('gui') and arg('plotjuggler'))" pkg="plotjuggler" type="plotjuggler" name="plotjuggler"
-        args="--nosplash --layout $(find dist_project)/plotjuggler/default.xml" />
+  <!-- LIVE VIEW OF THE ESTIMATES -->
+  <node if="$(eval arg('gui') and arg('monitor'))" pkg="dist_project" type="live_monitor.py" name="live_monitor" />
 
   <!-- RECORDING OF LOCALIZATION, GROUND TRUTH AND TARGET ESTIMATE TOPICS -->
   <node if="$(arg record)" pkg="rosbag" type="record" name="recorder"

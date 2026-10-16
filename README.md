@@ -61,7 +61,11 @@ All the robots reach the target. The cooperative estimate is **(0.965, 1.952, 0.
 
 ## Running the simulation
 
-The simulation opens Gazebo, the camera of a robot with the detected target and PlotJuggler (layouts in [`plotjuggler/`](plotjuggler)). It can run natively or in Docker, with the windows on the desktop or in the browser.
+The simulation opens Gazebo, the camera of a robot with the detected target and a live monitor of the estimates: map with true and estimated trajectories, covariance ellipses and the cooperative target estimate, plus the localization and target errors over time.
+
+![Live monitor](docs/live_monitor.png)
+
+It can run natively or in Docker, with the windows on the desktop or in the browser.
 
 ### Locally with ROS Noetic (Ubuntu 20.04)
 
@@ -104,7 +108,7 @@ roslaunch dist_project init.launch gui:=false record:=true bag_name:=my_run
 python3 plots/scripts/uncertainty.py bagfiles/my_run.bag --save
 ```
 
-Launch arguments of `init.launch`: `gui` (default `true`), `plotjuggler` (default `true`, set it to `false` if PlotJuggler is not installed), `record`, `bag_name`, `overview_camera` (fixed camera above the room on `/overview_camera/image_raw`). All the parameters of the filter and of the sensors are in [`launch/init.launch`](launch/init.launch).
+Launch arguments of `init.launch`: `gui` (default `true`), `monitor` (live monitor, default `true`), `record`, `bag_name`, `overview_camera` (fixed camera above the room on `/overview_camera/image_raw`). All the parameters of the filter and of the sensors are in [`launch/init.launch`](launch/init.launch).
 
 ### Changing the scenario
 
@@ -131,7 +135,6 @@ pytest
 | `msg/` | custom messages `uwb_data` and `robot_data` |
 | `bagfiles/` | recorded simulations |
 | `plots/` | scripts and figures of the results |
-| `plotjuggler/` | PlotJuggler layouts |
 | `test/` | unit tests |
 
 ## Using it as a base
