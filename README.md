@@ -97,6 +97,8 @@ cd uwb-ekf-cooperative-localization
 | macOS (Docker Desktop) | `./run.sh` | desktop in the browser at http://localhost:6080/vnc.html |
 | Windows (Docker Desktop) | `.\run.ps1` from PowerShell, or `./run.sh` inside WSL2 | desktop in the browser, or windows through WSLg |
 
+The ROS images exist only for x86-64: on Apple Silicon Docker Desktop runs them through emulation, which works but is slower.
+
 `run.sh` detects the GPU and adds the matching override in [`docker/`](docker): NVIDIA (requires [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)) or AMD/Intel through Mesa; without a GPU Gazebo renders on the CPU, which works but is slower. `GPU=nvidia|dri|none ./run.sh` forces a choice. The browser and headless modes run on a virtual display and always render on the CPU.
 
 ### Headless runs and results
