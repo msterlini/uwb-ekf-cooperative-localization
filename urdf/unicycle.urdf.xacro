@@ -368,7 +368,7 @@
             </image>
             <clip>
                 <near>0.05</near>
-                <far>8.00</far>
+                <far>15.00</far>
             </clip>
             <noise>
                 <type>gaussian</type>
