@@ -44,19 +44,19 @@ flowchart LR
 
 ## Results
 
-Run of 5 robots and 6 anchors recorded in [`bagfiles/total_bag`](bagfiles) (MCAP), evaluated against the Gazebo ground truth with [`plots/scripts/uncertainty.py`](plots/scripts/uncertainty.py):
+Run of 5 robots and 6 anchors recorded in [`bagfiles/total_bag`](bagfiles) (MCAP), the same run of the GIF above, evaluated against the Gazebo ground truth with [`plots/scripts/uncertainty.py`](plots/scripts/uncertainty.py):
 
 | Robot | RMSE x [m] | RMSE y [m] | RMSE θ [deg] | Mean predicted σ x, y [m] |
 |---|---|---|---|---|
-| 0 | 0.026 | 0.020 | 1.9 | 0.018, 0.020 |
-| 1 | 0.028 | 0.016 | 1.6 | 0.023, 0.014 |
-| 2 | 0.020 | 0.018 | 2.3 | 0.010, 0.022 |
-| 3 | 0.021 | 0.023 | 2.6 | 0.016, 0.021 |
-| 4 | 0.025 | 0.015 | 1.8 | 0.021, 0.016 |
+| 0 | 0.015 | 0.016 | 1.1 | 0.017, 0.020 |
+| 1 | 0.017 | 0.016 | 0.9 | 0.022, 0.013 |
+| 2 | 0.011 | 0.014 | 0.9 | 0.011, 0.022 |
+| 3 | 0.020 | 0.022 | 3.1 | 0.017, 0.022 |
+| 4 | 0.021 | 0.016 | 3.1 | 0.022, 0.016 |
 
-All the robots reach the target. The cooperative estimate is **(0.972, 1.997, 0.889) m** against the true (1.00, 2.00, 0.80) m: 3 cm on the plane and 9 cm in height. The position errors are consistent with the covariance predicted by the filter, and the heading error stays at the value of the initial estimate instead of drifting.
+All the robots reach the target. The cooperative estimate is **(0.987, 2.026, 0.902) m** against the true (1.00, 2.00, 0.80) m: 3 cm on the plane and 10 cm in height. The position errors are consistent with the covariance predicted by the filter, and the heading error stays at the value of the initial estimate instead of drifting.
 
-Compared with the ROS 1 version (position RMSE 1–2 cm, target error 6.4 cm) the errors are of the same order. In Gazebo Harmonic the odometry is computed from the wheels, so it drifts like a real one, while Gazebo Classic used the true velocity of the robot.
+Compared with the ROS 1 version (position RMSE 1–2 cm, target error 6.4 cm) the errors are of the same order. The trajectories start from the first estimate with a position uncertainty below 20 cm: before that the filter is still at its initial guess. In Gazebo Harmonic the odometry is computed from the wheels, so it drifts like a real one, while Gazebo Classic used the true velocity of the robot.
 
 <p align="center">
   <img src="plots/multiple.png" width="49%" />
