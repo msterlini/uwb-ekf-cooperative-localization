@@ -1,14 +1,12 @@
 # Launch files
 
-This folder contains ROS launch files, which are used to start nodes and set up configurations for running ROS applications.
+This folder contains the ROS 2 launch file of the simulation, written in Python.
 
-Launch files have the `.launch` extension and are written in XML format.
+- `sim.launch.py`: starts Gazebo Harmonic with `worlds/room.world`, spawns the room, the UWB anchors, the target and the robots read from the csv files in `coordinates/`, publishes the static transforms of the anchors, bridges the Gazebo topics (commands, odometry, ground truth, cameras, clock) to ROS and starts the nodes of every robot in its own namespace, plus the camera viewer and the live monitor.
 
-- `init.launch`: Main launch file to start the simulation.
-- `start_nodes.launch`: Launch file that calls itself recursively to start all the necessary nodes in each robot's namespace
-
-To run a launch file, use the following command:
+To run it:
 
 ```sh
-roslaunch dist_project launch_file.launch
+ros2 launch dist_project sim.launch.py
+ros2 launch dist_project sim.launch.py --show-args   # list of the arguments
 ```

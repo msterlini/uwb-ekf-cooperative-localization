@@ -1,6 +1,12 @@
 <?xml version="1.0"?>
 <robot name="unicycle" xmlns:xacro="http://ros.org/wiki/xacro">
 
+<!-- Name of the robot, used for the namespace of its Gazebo topics -->
+<xacro:arg name="robot_name" default="robot0" />
+<xacro:property name="robot_name" value="$(arg robot_name)" />
+<!-- Frame rate of the camera, it can be lowered when Gazebo renders without a GPU -->
+<xacro:arg name="camera_rate" default="30" />
+
 <!-- Defining the colors used in this robot -->
 <material name="Black">
 <color rgba="0.0 0.0 0.0 1.0"/>
@@ -17,6 +23,10 @@
 
 <material name="Blue">
 <color rgba="0.0 0.0 0.8 1.0"/>
+</material>
+
+<material name="Grey">
+<color rgba="0.5 0.5 0.5 1.0"/>
 </material>
 
 <!-- PROPERTY LIST -->
@@ -84,7 +94,6 @@
 </link>
 
 <gazebo reference="base_ground">
-    <turnGravityOff>false</turnGravityOff>
 </gazebo>
 
 <joint name="base_ground_joint" type="fixed">
@@ -112,7 +121,7 @@
             <!-- <box size="${base_length} ${base_width} ${base_height}" /> -->
             <mesh filename="package://dist_project/mesh/base.stl" scale="0.01 0.01 0.01" />
         </geometry>
-        <material name="White" />
+        <material name="Red" />
     </visual>
         
     <collision>
@@ -124,8 +133,6 @@
 </link>
 
 <gazebo reference="base_link">
-    <material>Gazebo/Red</material>
-    <turnGravityOff>false</turnGravityOff>
 </gazebo>
   
 <link name="caster_front_link">
@@ -160,10 +167,8 @@
 </joint>
 
 <gazebo reference="caster_front_link">
-    <turnGravityOff>false</turnGravityOff>
     <mu1 value="0.000001"/>
     <mu2 value="0.000001"/>
-    <material>Gazebo/Black</material>
 </gazebo>
 
 <link name="caster_back_link">
@@ -198,10 +203,8 @@
 </joint>
 
 <gazebo reference="caster_back_link">
-    <turnGravityOff>false</turnGravityOff>
     <mu1 value="0.000001"/>
     <mu2 value="0.000001"/>
-    <material>Gazebo/Black</material>
 </gazebo>
 
 <!-- RIGHT WHEEL DEFINITION -->
@@ -212,9 +215,7 @@
     <geometry>
         <mesh filename="package://dist_project/mesh/wheel.stl" scale="0.001 0.001 0.001" />
     </geometry>
-    <material name="Red">
-        <color rgba="0.8 0.0 0.0 1.0"/>
-    </material>
+    <material name="Grey" />
     </visual>
 
     <collision>
@@ -240,8 +241,6 @@
     <kp  value="10000000.0"/>
     <kd  value="1.0" />
     <fdir1 value="1 0 0"/>
-    <material>Gazebo/Grey</material>
-    <turnGravityOff>false</turnGravityOff>
 </gazebo>
 
 <joint name="front_right_wheel_joint" type="continuous">
@@ -273,9 +272,7 @@
     <geometry>
         <mesh filename="package://dist_project/mesh/wheel.stl" scale="0.001 0.001 0.001" />
     </geometry>
-    <material name="Red">
-        <color rgba="0.8 0.0 0.0 1.0"/>
-    </material>
+    <material name="Grey" />
     </visual>
 
     <collision>
@@ -301,8 +298,6 @@
     <kp  value="10000000.0"/>
     <kd  value="1.0" />
     <fdir1 value="1 0 0"/>
-    <material>Gazebo/Grey</material>
-    <turnGravityOff>false</turnGravityOff>
 </gazebo>
 
 <joint name="front_left_wheel_joint" type="continuous">
@@ -353,12 +348,13 @@
 </joint>
 
 <gazebo reference="camera_link">
-    <material>Gazebo/Blue</material>
 
     <sensor name="camera" type="camera">
         <pose> 0 0 0 0 0 0 </pose>
+        <always_on>true</always_on>
+        <topic>/${robot_name}/camera/image_raw</topic>
         <visualize>true</visualize>
-        <update_rate>30</update_rate>
+        <update_rate>$(arg camera_rate)</update_rate>
         <camera>
             <horizontal_fov>2</horizontal_fov>
             <image>
@@ -376,10 +372,6 @@
                 <stddev>0.07</stddev>
             </noise>
         </camera>
-        <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
-            <frame_name>camera_optical_link</frame_name>
-            <cameraName>camera</cameraName>
-        </plugin>
     </sensor>
 </gazebo>
 
@@ -400,41 +392,30 @@
 </joint>
 
 <gazebo reference="camera_tip_link">
-    <turnGravityOff>false</turnGravityOff>
-    <material>Gazebo/Blue</material>
 </gazebo>
 
 
 <!-- Gazebo Plugins -->
 <gazebo>
-    <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
-        <legacyMode>true</legacyMode>
-        <rosDebugLevel>Debug</rosDebugLevel>
-        <publishWheelTF>true</publishWheelTF>
-        <publishWheelJointState>true</publishWheelJointState>
-        <alwaysOn>true</alwaysOn>
-        <updateRate>10.0</updateRate>
-        <leftJoint>front_left_wheel_joint</leftJoint>
-        <rightJoint>front_right_wheel_joint</rightJoint>
-        <wheelSeparation>${base_width}</wheelSeparation>
-        <wheelDiameter>${2*wheel_radius}</wheelDiameter>
-        <broadcastTF>1</broadcastTF>
-        <wheelTorque>30</wheelTorque>
-        <wheelAcceleration>1.8</wheelAcceleration>
-        <commandTopic>cmd_vel</commandTopic>
-        <odometryFrame>odom</odometryFrame> 
-        <odometryTopic>odom</odometryTopic> 
-        <robotBaseFrame>base_ground</robotBaseFrame>
-        <odometrySource>world</odometrySource>
-        <publishTf>1</publishTf>
-        <publishOdomTF>true</publishOdomTF>
+    <!-- Differential drive: velocity commands in and wheel odometry out -->
+    <plugin filename="gz-sim-diff-drive-system" name="gz::sim::systems::DiffDrive">
+        <left_joint>front_left_wheel_joint</left_joint>
+        <right_joint>front_right_wheel_joint</right_joint>
+        <wheel_separation>${base_width}</wheel_separation>
+        <wheel_radius>${wheel_radius}</wheel_radius>
+        <topic>/${robot_name}/cmd_vel</topic>
+        <odom_topic>/${robot_name}/odom</odom_topic>
+        <odom_publish_frequency>10</odom_publish_frequency>
+        <frame_id>${robot_name}/odom</frame_id>
+        <child_frame_id>${robot_name}/base_ground</child_frame_id>
     </plugin>
-    <plugin name="p3d_base_controller" filename="libgazebo_ros_p3d.so">
-        <alwaysOn>true</alwaysOn>
-        <updateRate>10</updateRate>
-        <bodyName>base_link</bodyName>
-        <topicName>ground_truth/state</topicName>
-        <frameName>world</frameName>
+    <!-- Ground truth pose of the robot in the world frame -->
+    <plugin filename="gz-sim-odometry-publisher-system" name="gz::sim::systems::OdometryPublisher">
+        <odom_frame>world</odom_frame>
+        <robot_base_frame>${robot_name}/base_ground</robot_base_frame>
+        <odom_topic>/${robot_name}/ground_truth/state</odom_topic>
+        <odom_publish_frequency>10</odom_publish_frequency>
+        <dimensions>3</dimensions>
     </plugin>
 </gazebo>
 

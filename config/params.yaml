@@ -1,0 +1,30 @@
+# Parameters shared by all the nodes of the simulation (same values of the ROS 1 version)
+/**:
+  ros__parameters:
+    use_sim_time: true
+
+    # UWB RANGING: noise std = floor + rel * distance, used by the simulator and the EKF
+    uwb_rate: 10.0
+    uwb_range_rel_std: 0.015
+    uwb_range_floor_std: 0.05
+
+    # EKF: odometry input noise std = const + rel * value read
+    odom_rate: 10.0
+    ekf_v_std: 0.05
+    ekf_v_std_rel: 0.1
+    ekf_w_std: 0.05
+    ekf_w_std_rel: 0.1
+    # Speed below which the robot is considered still
+    ekf_stationary_speed: 0.02
+    # Number of UWB callbacks to wait before estimating the initial orientation
+    ekf_warmup_updates: 30
+    ekf_heading_window: 20
+
+    # MOTION PLANNER
+    motion_planner_rate: 10
+    # Point towards which a robot moves if it doesn't see the target after a full turn (center of the room)
+    explore_point_x: 0.0
+    explore_point_y: 0.0
+
+    # TARGET ESTIMATOR
+    target_estimator_rate: 10

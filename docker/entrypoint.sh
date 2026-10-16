@@ -1,5 +1,5 @@
 #!/bin/bash
 set -e
-source /opt/ros/noetic/setup.bash
-source "${CATKIN_WS}/devel/setup.bash"
+source /opt/ros/jazzy/setup.bash
+source "${ROS_WS}/install/setup.bash"
 exec "$@"

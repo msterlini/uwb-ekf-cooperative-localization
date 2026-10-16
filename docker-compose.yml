@@ -1,33 +1,40 @@
 # Use ./run.sh, which picks the GPU override in docker/ (see the README).
+# Without a GPU Gazebo renders on the CPU: CAMERA_RATE lowers the frame rate of the robot cameras.
 # Desktop in the browser (any OS):   docker compose up web   ->  http://localhost:6080/vnc.html
 # Headless run that records a bag:   DURATION=300 BAG_NAME=my_run docker compose run --rm headless
 services:
   web:
     build: .
-    image: dist_project:noetic
+    working_dir: /ros2_ws/src/dist_project
+    image: dist_project:jazzy
     ports:
       - "6080:6080"
     shm_size: 1gb
     volumes:
-      - ./bagfiles:/catkin_ws/src/dist_project/bagfiles
-    command: vnc.sh roslaunch dist_project init.launch
+      - ./bagfiles:/ros2_ws/src/dist_project/bagfiles
+    command: vnc.sh ros2 launch dist_project sim.launch.py camera_rate:=${CAMERA_RATE:-10}
 
   sim:
     build: .
-    image: dist_project:noetic
+    working_dir: /ros2_ws/src/dist_project
+    image: dist_project:jazzy
     environment:
       - DISPLAY=${DISPLAY}
       - QT_X11_NO_MITSHM=1
+    shm_size: 1gb
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ./bagfiles:/catkin_ws/src/dist_project/bagfiles
-    command: roslaunch dist_project init.launch
+      - ./bagfiles:/ros2_ws/src/dist_project/bagfiles
+    command: ros2 launch dist_project sim.launch.py camera_rate:=${CAMERA_RATE:-30}
 
   headless:
     build: .
-    image: dist_project:noetic
+    working_dir: /ros2_ws/src/dist_project
+    image: dist_project:jazzy
+    shm_size: 1gb
     volumes:
-      - ./bagfiles:/catkin_ws/src/dist_project/bagfiles
+      - ./bagfiles:/ros2_ws/src/dist_project/bagfiles
     command: >
       xvfb.sh timeout --signal=INT ${DURATION:-300}
-      roslaunch dist_project init.launch gui:=false record:=true bag_name:=${BAG_NAME:-run}
+      ros2 launch dist_project sim.launch.py gui:=false record:=true bag_name:=${BAG_NAME:-run}
+      camera_rate:=${CAMERA_RATE:-10}

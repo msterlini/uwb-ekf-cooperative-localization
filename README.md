@@ -1,17 +1,19 @@
 # Multi-robot UWB localization and cooperative target estimation
 
 [![CI](https://github.com/msterlini/uwb-ekf-cooperative-localization/actions/workflows/ci.yml/badge.svg)](https://github.com/msterlini/uwb-ekf-cooperative-localization/actions/workflows/ci.yml)
-![ROS Noetic](https://img.shields.io/badge/ROS-Noetic-22314E)
-![Gazebo 11](https://img.shields.io/badge/Gazebo-11-orange)
+![ROS 2 Jazzy](https://img.shields.io/badge/ROS_2-Jazzy-22314E)
+![Gazebo Harmonic](https://img.shields.io/badge/Gazebo-Harmonic-orange)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A ROS/Gazebo simulation of a team of unicycle robots in an indoor room. Each robot localizes itself with an **Extended Kalman Filter** that fuses wheel odometry with **UWB ranges** to anchors on the ceiling, then searches a target with its camera. The robots that reach the target share their pose and uncertainty, and every robot fuses them into a **3-D estimate of the target position**.
+
+> **Branch `ros2`**: port of the project to ROS 2 Jazzy and Gazebo Harmonic, with the same estimation algorithms, robot behavior, scenario and parameters. The original ROS 1 Noetic / Gazebo Classic version is on [`main`](https://github.com/msterlini/uwb-ekf-cooperative-localization/tree/main).
 
 Project of the course *Distributed Estimation for Robots and Vehicles* (2024). The full report, *Distributed unicycle system for the estimation of the 3D position of a target*, is in [`docs/report.pdf`](docs/report.pdf).
 
 ![Simulation](docs/demo.gif)
 
-*Overview camera of a run: estimated trajectories of the five robots (coloured trails) and cooperative estimate of the target (yellow cross).*
+*Overview camera of a run of the ROS 1 version: estimated trajectories of the five robots (coloured trails) and cooperative estimate of the target (yellow cross).*
 
 ## How it works
 
@@ -42,17 +44,19 @@ flowchart LR
 
 ## Results
 
-Run of 5 robots and 6 anchors recorded in [`bagfiles/total_bag.bag`](bagfiles), evaluated against the Gazebo ground truth with [`plots/scripts/uncertainty.py`](plots/scripts/uncertainty.py):
+Run of 5 robots and 6 anchors recorded in [`bagfiles/total_bag`](bagfiles) (MCAP), evaluated against the Gazebo ground truth with [`plots/scripts/uncertainty.py`](plots/scripts/uncertainty.py):
 
 | Robot | RMSE x [m] | RMSE y [m] | RMSE θ [deg] | Mean predicted σ x, y [m] |
 |---|---|---|---|---|
-| 0 | 0.016 | 0.014 | 4.9 | 0.017, 0.019 |
-| 1 | 0.015 | 0.009 | 1.2 | 0.022, 0.012 |
-| 2 | 0.010 | 0.014 | 1.7 | 0.008, 0.021 |
-| 3 | 0.013 | 0.013 | 2.4 | 0.015, 0.020 |
-| 4 | 0.017 | 0.014 | 5.2 | 0.021, 0.015 |
+| 0 | 0.026 | 0.020 | 1.9 | 0.018, 0.020 |
+| 1 | 0.028 | 0.016 | 1.6 | 0.023, 0.014 |
+| 2 | 0.020 | 0.018 | 2.3 | 0.010, 0.022 |
+| 3 | 0.021 | 0.023 | 2.6 | 0.016, 0.021 |
+| 4 | 0.025 | 0.015 | 1.8 | 0.021, 0.016 |
 
-All the robots reach the target. The cooperative estimate is **(0.965, 1.952, 0.825) m** against the true (1.00, 2.00, 0.80) m, an error of **6.4 cm**. The position errors are consistent with the covariance predicted by the filter, and the heading error stays at the value of the initial estimate instead of drifting.
+All the robots reach the target. The cooperative estimate is **(0.972, 1.997, 0.889) m** against the true (1.00, 2.00, 0.80) m: 3 cm on the plane and 9 cm in height. The position errors are consistent with the covariance predicted by the filter, and the heading error stays at the value of the initial estimate instead of drifting.
+
+Compared with the ROS 1 version (position RMSE 1–2 cm, target error 6.4 cm) the errors are of the same order. In Gazebo Harmonic the odometry is computed from the wheels, so it drifts like a real one, while Gazebo Classic used the true velocity of the robot.
 
 <p align="center">
   <img src="plots/multiple.png" width="49%" />
@@ -67,17 +71,17 @@ The simulation opens Gazebo, the camera of a robot with the detected target and 
 
 It can run natively or in Docker, with the windows on the desktop or in the browser.
 
-### Locally with ROS Noetic (Ubuntu 20.04)
+### Locally with ROS 2 Jazzy (Ubuntu 24.04)
 
 ```sh
-mkdir -p ~/catkin_ws/src && cd ~/catkin_ws/src
-git clone https://github.com/msterlini/uwb-ekf-cooperative-localization.git dist_project
-cd ~/catkin_ws
-rosdep update --include-eol-distros
+mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
+git clone -b ros2 https://github.com/msterlini/uwb-ekf-cooperative-localization.git dist_project
+cd ~/ros2_ws
+rosdep update
 rosdep install --from-paths src --ignore-src -y
-catkin_make
-source devel/setup.bash
-roslaunch dist_project init.launch
+colcon build
+source install/setup.bash
+ros2 launch dist_project sim.launch.py
 ```
 
 ### With Docker
@@ -85,7 +89,7 @@ roslaunch dist_project init.launch
 No ROS installation needed, only Docker:
 
 ```sh
-git clone https://github.com/msterlini/uwb-ekf-cooperative-localization.git
+git clone -b ros2 https://github.com/msterlini/uwb-ekf-cooperative-localization.git
 cd uwb-ekf-cooperative-localization
 ./run.sh          # Linux (and WSL2): windows on the desktop, with the GPU of the host
 ./run.sh web      # desktop in the browser at http://localhost:6080/vnc.html
@@ -108,15 +112,17 @@ Record a bag in `bagfiles/` without any window, then compute the error statistic
 ```sh
 # Docker
 DURATION=300 BAG_NAME=my_run ./run.sh headless
-docker compose run --rm -v ./plots:/catkin_ws/src/dist_project/plots headless \
-    python3 src/dist_project/plots/scripts/uncertainty.py src/dist_project/bagfiles/my_run.bag --save
+pip install rosbags matplotlib
+python3 plots/scripts/uncertainty.py bagfiles/my_run --save
 
 # Native
-roslaunch dist_project init.launch gui:=false record:=true bag_name:=my_run
-python3 plots/scripts/uncertainty.py bagfiles/my_run.bag --save
+ros2 launch dist_project sim.launch.py gui:=false record:=true bag_name:=my_run
+python3 plots/scripts/uncertainty.py bagfiles/my_run --save
 ```
 
-Launch arguments of `init.launch`: `gui` (default `true`), `monitor` (live monitor, default `true`), `record`, `bag_name`, `overview_camera` (fixed camera above the room on `/overview_camera/image_raw`). All the parameters of the filter and of the sensors are in [`launch/init.launch`](launch/init.launch).
+The bags are recorded in MCAP format; the analysis scripts read them with [rosbags](https://gitlab.com/ternaris/rosbags), which also reads the ROS 1 bags of the report and needs no ROS installation.
+
+Launch arguments of `sim.launch.py`: `gui` (default `true`), `monitor` (live monitor, default `true`), `record`, `bag_name`, `bag_dir`, `overview_camera` (fixed camera above the room on `/overview_camera/image_raw`), `camera_rate` (frame rate of the robot cameras, default 30; Gazebo Harmonic renders the cameras in lockstep with the physics, so without a GPU a lower rate keeps the simulation fast, and `run.sh` uses 10 in that case). All the parameters of the filter and of the sensors are in [`config/params.yaml`](config/params.yaml).
 
 ### Changing the scenario
 
@@ -137,10 +143,11 @@ pytest
 |---|---|
 | `scripts/` | ROS nodes, see [scripts/README.md](scripts/README.md) |
 | `src/dist_project/` | EKF, bearing-only triangulation and anchor lookup |
-| `launch/` | `init.launch` (whole simulation), `start_nodes.launch` (nodes of one robot) |
+| `launch/` | `sim.launch.py`: Gazebo, spawning from the csv files, ROS-Gazebo bridge and the nodes of every robot |
+| `config/` | `params.yaml`, parameters of all the nodes |
 | `coordinates/` | spawn positions of robots, anchors and target |
 | `urdf/`, `mesh/`, `models/`, `worlds/` | robot description, room, target and Gazebo world |
-| `msg/` | custom messages `uwb_data` and `robot_data` |
+| `msg/` | custom messages `UwbData` and `RobotData` |
 | `bagfiles/` | recorded simulations |
 | `plots/` | scripts and figures of the results |
 | `test/` | unit tests |

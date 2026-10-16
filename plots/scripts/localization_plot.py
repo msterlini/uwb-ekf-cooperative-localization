@@ -1,9 +1,10 @@
 import os
 import sys
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-import rosbag
+from rosbags.highlevel import AnyReader
 
 if __name__ == "__main__":
 
@@ -21,19 +22,16 @@ if __name__ == "__main__":
 
     # Data extraction
     # Packing of data iterating all messages stored
-    with rosbag.Bag(bagfile, 'r') as bag:
-        for topic, msg, t in bag.read_messages(topics=[topic1]):
-            # The old bag files store a Pose, the new ones a PoseWithCovarianceStamped
-            pose = msg.pose.pose if hasattr(msg, 'pose') else msg
-            x = pose.position.x
-            y = pose.position.y
-            loc_data.append([x, y])
-
-    with rosbag.Bag(bagfile, 'r') as bag:
-        for topic, msg, t in bag.read_messages(topics=[topic2]):
-            x = msg.pose.pose.position.x
-            y = msg.pose.pose.position.y
-            gt_data.append([x, y])
+    # rosbags reads both ROS 1 (.bag) and ROS 2 (mcap) bags
+    with AnyReader([Path(bagfile)]) as reader:
+        for connection, t, rawdata in reader.messages():
+            msg = reader.deserialize(rawdata, connection.msgtype)
+            if connection.topic == topic1:
+                # The old bag files store a Pose, the new ones a PoseWithCovarianceStamped
+                pose = msg.pose.pose if hasattr(msg, 'pose') else msg
+                loc_data.append([pose.position.x, pose.position.y])
+            elif connection.topic == topic2:
+                gt_data.append([msg.pose.pose.position.x, msg.pose.pose.position.y])
 
     # Conversion of python list to numpy array
     loc_data = np.array(loc_data)
