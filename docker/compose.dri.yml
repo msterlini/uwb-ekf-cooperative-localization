@@ -1,0 +1,5 @@
+# GPU acceleration for AMD and Intel (Mesa): the host render devices are shared with the container
+services:
+  sim:
+    devices:
+      - /dev/dri:/dev/dri
