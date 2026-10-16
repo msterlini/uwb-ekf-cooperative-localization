@@ -13,7 +13,7 @@ Project of the course *Distributed Estimation for Robots and Vehicles* (2024). T
 
 ![Simulation](docs/demo.gif)
 
-*Overview camera of a run of the ROS 1 version: estimated trajectories of the five robots (coloured trails) and cooperative estimate of the target (yellow cross).*
+*Overview camera of a run in Gazebo Harmonic: estimated trajectories of the five robots (coloured trails) and cooperative estimate of the target (yellow cross).*
 
 ## How it works
 
