@@ -1,11 +1,12 @@
 import csv
 import os
 import sys
+from collections import defaultdict
+from pathlib import Path
 
 import matplotlib
 import numpy as np
-import rosbag
-import tf.transformations
+from rosbags.highlevel import AnyReader
 
 # Without a display the figures are saved in the plots folder instead of being shown
 SAVE = '--save' in sys.argv or not os.environ.get('DISPLAY')
@@ -25,8 +26,17 @@ def read_coordinates(name):
 
 
 def yaw(q):
-    (roll, pitch, theta) = tf.transformations.euler_from_quaternion([q.x, q.y, q.z, q.w])
-    return theta
+    # Rotation around z of the quaternion
+    return np.arctan2(2 * (q.w * q.z + q.x * q.y), 1 - 2 * (q.y * q.y + q.z * q.z))
+
+
+def read_bag(path):
+    # Messages of every topic as (time [s], message); rosbags reads both ROS 1 (.bag) and ROS 2 (mcap) bags
+    messages = defaultdict(list)
+    with AnyReader([Path(path)]) as reader:
+        for connection, timestamp, rawdata in reader.messages():
+            messages[connection.topic].append((timestamp * 1e-9, reader.deserialize(rawdata, connection.msgtype)))
+    return messages
 
 
 def show(name=None):
@@ -40,9 +50,9 @@ def show(name=None):
 
 if __name__ == "__main__":
 
-    # Path of the rosbag file to extract data from, total_bag.bag by default
+    # Path of the bag to extract data from, bagfiles/total_bag by default
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
-    bagfile = args[0] if args else os.path.join(PACKAGE_DIR, 'bagfiles', 'total_bag.bag')
+    bagfile = args[0] if args else os.path.join(PACKAGE_DIR, 'bagfiles', 'total_bag')
 
     # Positions of tags and target and number of robots of the simulation taken from the csv files
     tags = read_coordinates('tag_coordinates.csv')
@@ -56,38 +66,38 @@ if __name__ == "__main__":
     target = []
     target_std = []
 
-    with rosbag.Bag(bagfile, 'r') as bag:
-        for i in range(n_robots):
-            id = "/robot" + str(i)
+    messages = read_bag(bagfile)
+    for i in range(n_robots):
+        id = "/robot" + str(i)
 
-            # Ground truth data extraction
-            tmp = []
-            for topic, msg, t in bag.read_messages(topics=[id + "/ground_truth/state"]):
-                pose = msg.pose.pose
-                tmp.append([t.to_sec(), pose.position.x, pose.position.y, yaw(pose.orientation)])
-            gt.append(np.array(tmp))
+        # Ground truth data extraction
+        tmp = []
+        for t, msg in messages[id + "/ground_truth/state"]:
+            pose = msg.pose.pose
+            tmp.append([t, pose.position.x, pose.position.y, yaw(pose.orientation)])
+        gt.append(np.array(tmp))
 
-            # Localization data extraction
-            tmp1 = []
-            tmp2 = []
-            for topic, msg, t in bag.read_messages(topics=[id + "/localization_data_topic"]):
-                pose = msg.pose.pose
-                cov = np.reshape(msg.pose.covariance, (6, 6))
-                tmp1.append([t.to_sec(), pose.position.x, pose.position.y, yaw(pose.orientation)])
-                tmp2.append([t.to_sec(), np.sqrt(cov[0, 0]), np.sqrt(cov[1, 1]), np.sqrt(cov[5, 5])])
-            loc.append(np.array(tmp1))
-            loc_std.append(np.array(tmp2))
+        # Localization data extraction
+        tmp1 = []
+        tmp2 = []
+        for t, msg in messages[id + "/localization_data_topic"]:
+            pose = msg.pose.pose
+            cov = np.reshape(msg.pose.covariance, (6, 6))
+            tmp1.append([t, pose.position.x, pose.position.y, yaw(pose.orientation)])
+            tmp2.append([t, np.sqrt(cov[0, 0]), np.sqrt(cov[1, 1]), np.sqrt(cov[5, 5])])
+        loc.append(np.array(tmp1))
+        loc_std.append(np.array(tmp2))
 
-            # Target estimate data extraction
-            tmp1 = []
-            tmp2 = []
-            for topic, msg, t in bag.read_messages(topics=[id + "/target_estimate"]):
-                pose = msg.pose.pose
-                cov = np.reshape(msg.pose.covariance, (6, 6))
-                tmp1.append([t.to_sec(), pose.position.x, pose.position.y, pose.position.z])
-                tmp2.append([t.to_sec(), np.sqrt(cov[0, 0]), np.sqrt(cov[1, 1]), np.sqrt(cov[2, 2])])
-            target.append(np.array(tmp1).reshape(-1, 4))
-            target_std.append(np.array(tmp2).reshape(-1, 4))
+        # Target estimate data extraction
+        tmp1 = []
+        tmp2 = []
+        for t, msg in messages[id + "/target_estimate"]:
+            pose = msg.pose.pose
+            cov = np.reshape(msg.pose.covariance, (6, 6))
+            tmp1.append([t, pose.position.x, pose.position.y, pose.position.z])
+            tmp2.append([t, np.sqrt(cov[0, 0]), np.sqrt(cov[1, 1]), np.sqrt(cov[2, 2])])
+        target.append(np.array(tmp1).reshape(-1, 4))
+        target_std.append(np.array(tmp2).reshape(-1, 4))
 
     # The time starts from the first localization message
     t0 = min(loc[i][0, 0] for i in range(n_robots))
