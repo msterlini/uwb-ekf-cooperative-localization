@@ -133,3 +133,12 @@ The script interacts with the following topics:
 - **`localization_callback(self, actual_pos)`**: Updates robot position and orientation; starts publishing if target height is available.
 - **`gather_callback(self, data)`**: Processes tags from other robots and computes the target position with a weighted least squares intersection of the bearing lines (`src/dist_project/triangulation.py`).
 
+
+# `live_monitor.py`
+
+## Key Features
+Live view of the simulation, opened by `init.launch`: map of the room with the UWB anchors, the true and estimated trajectories of every robot with the covariance ellipse of the estimate, the cooperative target estimate with its uncertainty, and the localization and target errors over time. Estimates are shown once the filter converged.
+
+## Topics
+- **Subscription:**
+  - `/robotN/ground_truth/state` (Odometry), `/robotN/localization_data_topic` (PoseWithCovarianceStamped), `/robotN/target_estimate` (PoseWithCovarianceStamped) for every robot in `coordinates/robot_coordinates.csv`.
