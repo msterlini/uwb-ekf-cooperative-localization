@@ -83,15 +83,11 @@ No ROS installation needed, only Docker:
 ```sh
 git clone https://github.com/msterlini/uwb-ekf-cooperative-localization.git
 cd uwb-ekf-cooperative-localization
-docker compose up web          # desktop in the browser: http://localhost:6080/vnc.html (any OS)
+./run.sh          # Linux: windows on the desktop, with the GPU of the host
+./run.sh web      # any OS: desktop in the browser at http://localhost:6080/vnc.html
 ```
 
-On a Linux host with an X server the windows can also open directly on the desktop:
-
-```sh
-xhost +local:docker
-docker compose up sim
-```
+`run.sh` detects the GPU and adds the matching override in [`docker/`](docker): NVIDIA (requires [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)) or AMD/Intel through Mesa; without a GPU Gazebo renders on the CPU, which works but is slower. `GPU=nvidia|dri|none ./run.sh` forces a choice. The browser and headless modes run on a virtual display and always render on the CPU.
 
 ### Headless runs and results
 
@@ -99,7 +95,7 @@ Record a bag in `bagfiles/` without any window, then compute the error statistic
 
 ```sh
 # Docker
-DURATION=300 BAG_NAME=my_run docker compose run --rm headless
+DURATION=300 BAG_NAME=my_run ./run.sh headless
 docker compose run --rm -v ./plots:/catkin_ws/src/dist_project/plots headless \
     python3 src/dist_project/plots/scripts/uncertainty.py src/dist_project/bagfiles/my_run.bag --save
 
