@@ -6,7 +6,8 @@
 # It will also publish the coordinate of the center of the recognized shape.
 # It will make heavy use of the cv2 python module.
 
-import rospy
+import rclpy
+from rclpy.node import Node
 import cv2
 import numpy as np
 
@@ -15,10 +16,11 @@ from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Point
 
-class BlobDetector:
+class BlobDetector(Node):
 
     # Initializer definition
     def __init__(self, thr_min, thr_max, blur=15, blob_params=None, detection_window=None):
+        super().__init__('blob_detector')
 
         # Parameters setting
         self.set_threshold(thr_min, thr_max)
@@ -30,14 +32,14 @@ class BlobDetector:
         self.blob_point = Point()
 
         # Publishing topics
-        self.new_image_pub = rospy.Publisher("target/image_blob", Image, queue_size=1)
-        self.blob_pub = rospy.Publisher("target/point_blob", Point, queue_size=1)
+        self.new_image_pub = self.create_publisher(Image, "target/image_blob", 1)
+        self.blob_pub = self.create_publisher(Point, "target/point_blob", 1)
 
         # Initialize CV Bridge to convert ROS Image to OpenCV image format
         self.bridge = CvBridge()
 
         # Subscribing topics
-        self.image_sub = rospy.Subscriber("camera/image_raw", Image, self.callback)
+        self.image_sub = self.create_subscription(Image, "camera/image_raw", self.callback, 1)
 
     # Blob detecting function: returns keypoints and mask
     def blob_detect(self, image,                  # The frame (cv standard)
@@ -303,15 +305,13 @@ if __name__ == '__main__':
     params.minInertiaRatio = 0.7
 
     # Node initialization
-    rospy.init_node('blob_detector', anonymous=True)
+    rclpy.init()
 
     # Blob detector class initialization
     ic = BlobDetector(yellow_min, yellow_max, blur, params, detection_window)
 
     try:
-        rospy.spin()
+        rclpy.spin(ic)
         # We don't need to cast any particular function since the detector already works on the callbacks of the topics
-    except rospy.ROSInterruptException:
-        rospy.loginfo("Program shutdown: Image processing node interrupted")
-    except rospy.ROSInternalException:
-        rospy.loginfo("Blob detector node interrupted")
+    except KeyboardInterrupt:
+        ic.get_logger().info("Program shutdown: Image processing node interrupted")

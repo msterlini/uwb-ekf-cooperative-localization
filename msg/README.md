@@ -8,5 +8,5 @@ In ROS, messages are the primary way that nodes communicate with each other. Whi
 
 A `.msg` file consists of field names and types. Once defined, custom messages need to be compiled so that ROS nodes can use them.
 
-- `robot_data.msg`: Message used to communicate the robot's state, it holds the id of each robot's namespace, the height of the target seen from the camera and the state (x, y, theta) with the corresponding uncertainties
-- `uwb_data.msg`: Message used to identify the UWB tag with tag_id. It communicates the distance between the tag and the robot with a float
+- `RobotData.msg`: Message used to communicate the robot's state, it holds the id of each robot's namespace, the height of the target seen from the camera and the state (x, y, theta) with the corresponding uncertainties
+- `UwbData.msg`: Message used to identify the UWB tag with tag_id. It communicates the distance between the tag and the robot with a float

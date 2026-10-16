@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 import numpy as np
-import rospy
-import tf.transformations
+import rclpy
 from geometry_msgs.msg import Point, Pose, PoseWithCovarianceStamped, Twist
+from rclpy.node import Node
+from rclpy.qos import DurabilityPolicy, QoSProfile
+
+from dist_project.transforms import yaw_from_quaternion
 
 # Constants
 TARGET_REACHED_Y_THRESHOLD = -0.5
@@ -23,9 +26,10 @@ EXPLORE_DISTANCE = 1.5
 # TARGET_REACHED -> In this state the robots stops moving and starts publishing the target height seen from its own point of view in its own camera reference frame
 # EXPLORE -> If after a full turn the target was not found the robot moves towards the center of the room and then searches again
 
-class MotionPlanner:
+class MotionPlanner(Node):
 
     def __init__(self):
+        super().__init__("motion_planner", automatically_declare_parameters_from_overrides=True)
 
         # Variable to hold the target height
         self.target_height = 0
@@ -41,36 +45,42 @@ class MotionPlanner:
         self.pose = None
         self.explore_start = None
         # Point towards which the robot explores, the center of the room
-        self.explore_point = np.array([rospy.get_param("/explore_point_x"), rospy.get_param("/explore_point_y")])
+        self.explore_point = np.array([self.get_parameter("explore_point_x").value,
+                                       self.get_parameter("explore_point_y").value])
 
         # Topic to publish control input
-        self.pub = rospy.Publisher("cmd_vel", Twist, queue_size=1)
-        rospy.loginfo(">>>> Publishing velocity to local /cmd_vel topic =====")
+        self.pub = self.create_publisher(Twist, "cmd_vel", 1)
+        self.get_logger().info(">>>> Publishing velocity to local /cmd_vel topic =====")
 
         # Topic to get target position of detected blob
-        self.sub = rospy.Subscriber("target/point_blob", Point, self.blob_callback)
-        rospy.loginfo("<<<< Subscribed to local target/point_blob topic =====")
+        self.sub = self.create_subscription(Point, "target/point_blob", self.blob_callback, 10)
+        self.get_logger().info("<<<< Subscribed to local target/point_blob topic =====")
 
         # Topic to receive switch state input from localization module to start the movement
-        self.init_sub = rospy.Subscriber("init_move", Pose, self.init_callback)
-        rospy.loginfo("<<<< Subscribed to local init_move topic =====")
+        latched = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
+        self.init_sub = self.create_subscription(Pose, "init_move", self.init_callback, latched)
+        self.get_logger().info("<<<< Subscribed to local init_move topic =====")
 
         # Topic of the estimated pose, used to move towards the center of the room while exploring
-        rospy.Subscriber("localization_data_topic", PoseWithCovarianceStamped, self.localization_callback, queue_size=1)
+        self.create_subscription(PoseWithCovarianceStamped, "localization_data_topic", self.localization_callback, 1)
 
     def init_callback(self, data):
         # In this simple callback we unregister from the init_move topic and switch the state, it will be invoked only once
         self.start_search()
-        self.init_sub.unregister()
+        self.destroy_subscription(self.init_sub)
 
     def start_search(self):
         self.current_state = "SEARCH"
-        self.search_start_time = rospy.get_time()
+        self.search_start_time = self.time()
+
+    def time(self):
+        # Simulation time in seconds
+        return self.get_clock().now().nanoseconds * 1e-9
 
     def localization_callback(self, data):
         pose = data.pose.pose
         q = pose.orientation
-        theta = tf.transformations.euler_from_quaternion([q.x, q.y, q.z, q.w])[2]
+        theta = yaw_from_quaternion(q.x, q.y, q.z, q.w)
         self.pose = np.array([pose.position.x, pose.position.y, theta])
 
         if self.current_state == "EXPLORE":
@@ -102,16 +112,16 @@ class MotionPlanner:
 
         # We act only if we are currently searching, exploring or moving towards a target
         if self.current_state in ("SEARCH", "EXPLORE", "APPROACH"):
-            self.last_blob_time = rospy.get_time()
+            self.last_blob_time = self.time()
             # The robot stops moving towards the target once it is close enough, this is translated in the y coordinate of the target being above a certain value chosen a priori, the sign is inverted since we are referring to the camera reference frame
             if y < TARGET_REACHED_Y_THRESHOLD:
                 # State switch
                 self.current_state = "TARGET_REACHED"
                 # Update of variable holding target_height
                 self.target_height = y
-                self.sub.unregister()
+                self.destroy_subscription(self.sub)
                 # It starts publishing the height of the target that the robot sees from its point of view
-                self.pub_target = rospy.Publisher("target_height", Point, queue_size=1)
+                self.pub_target = self.create_publisher(Point, "target_height", 1)
             else:
                 # If the robot is not close enough we are still approaching the target
                 self.current_state = "APPROACH"
@@ -138,8 +148,8 @@ class MotionPlanner:
     def publish_velocity(self, linear_x, angular_z):
         # The cmd_vel topic accepts messages of type Twist
         command = Twist()
-        command.linear.x = linear_x
-        command.angular.z = angular_z
+        command.linear.x = float(linear_x)
+        command.angular.z = float(angular_z)
         self.pub.publish(command)
 
     # This is the finite state machine controller that will be invoked continously
@@ -148,7 +158,7 @@ class MotionPlanner:
             # This is the command to slowly move forward until we have a good estimate of the orientation
             self.publish_velocity(0.1, 0)
         elif self.current_state == "SEARCH":
-            if rospy.get_time() - self.search_start_time > 1.2 * 2 * np.pi / TURN_SPEED and self.pose is not None:
+            if self.time() - self.search_start_time > 1.2 * 2 * np.pi / TURN_SPEED and self.pose is not None:
                 # After a full turn without seeing the target the robot moves towards the center of the room
                 self.current_state = "EXPLORE"
                 self.explore_start = self.pose[:2].copy()
@@ -158,39 +168,29 @@ class MotionPlanner:
         elif self.current_state == "APPROACH":
             # The gazebo plugin keeps applying the last command, if the target is lost the robot must stop and search
             # again instead of going straight until it hits a wall
-            if rospy.get_time() - self.last_blob_time > TARGET_LOST_TIME:
+            if self.time() - self.last_blob_time > TARGET_LOST_TIME:
                 self.publish_velocity(0, 0)
                 self.start_search()
         elif self.current_state == "TARGET_REACHED":
             # If the target is reached the robot stops and continuosly publishes the target height
             self.publish_velocity(0, 0)
             message = Point()
-            message.z = self.target_height
+            message.z = float(self.target_height)
             self.pub_target.publish(message)
 
 if __name__ == "__main__":
 
     # Node initialization
-    rospy.init_node("motion_planner", anonymous=True)
-
-    # Parameters import
-    rate_val = rospy.get_param("/motion_planner_rate")
+    rclpy.init()
 
     # Class initialilzation
     motion_planner = MotionPlanner()
 
-    # Ropsy rate of node imposition
-    rate = rospy.Rate(rate_val)
+    # The finite state machine controller is invoked at a fixed rate
+    motion_planner.create_timer(1.0 / motion_planner.get_parameter("motion_planner_rate").value,
+                                motion_planner.execute_state_machine)
 
     try:
-        while not rospy.is_shutdown():
-            # Main loop where the finite state machine controller is invoked
-            motion_planner.execute_state_machine()
-            rate.sleep()
-    except rospy.ROSInterruptException:
-        rospy.loginfo("Program shutdown: Motion planner node interrupted")
-    except rospy.ROSInternalException:
-        rospy.loginfo("Motion planner node interrupted")
-
-
-
+        rclpy.spin(motion_planner)
+    except KeyboardInterrupt:
+        motion_planner.get_logger().info("Program shutdown: Motion planner node interrupted")
