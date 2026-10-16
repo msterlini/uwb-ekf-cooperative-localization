@@ -1,23 +1,6 @@
 # Scripts
 
-These python scripts hold all the nodes and logic of the project
-
-# `gazebo_init.py`
-## Key Features
-This node dynamically spawns tags, targets, robots and the room model in the Gazebo simulation environment. It also recursively initialize all the other ROS nodes for each robot based on the specified number of lines in the csv file.
-It also continuosly publishes static transforms for the tags, aiding in localization tasks.
-
-## Topics
-The script interacts with the following topics:
-- **Publication**: 
-  - Static transforms of all the tags are published once on the latched `/tf_static` topic using `tf2_ros.StaticTransformBroadcaster`.
-
-## Functions
-- **`spawn_tag(x, y, id)`**: Spawns a tag at the given coordinates using a URDF model.
-- **`spawn_target(x, y, id)`**: Spawns a target at the given coordinates using an SDF model.
-- **`spawn_robot(x, y, id)`**: Spawns a robot at the given coordinates using a URDF model.
-- **`spawn_room()`**: Spawns the room model in the simulation using an SDF file.
-- **`static_transform(x, y, id)`**: Creates the static transform of a tag.
+These python scripts hold all the ROS 2 nodes of the project, the scene is built by `launch/sim.launch.py`
 
 # `uwb_dist_sim.py`
 
@@ -29,7 +12,7 @@ The script interacts with the following topics:
 - **Subscription**: 
   - `/ground_truth/state`: Subscribes to this topic to get the robot's current ground truth position.
 - **Publication**:
-  - `uwb_data_topic`: Publishes UWB distance data using a custom message type `uwb_data`.
+  - `uwb_data_topic`: Publishes UWB distance data using a custom message type `UwbData`.
 
 ## Functions
 - **`subscribe_data(data)`**: Callback function for the ground truth subscriber, updates the robot's position.
@@ -74,7 +57,7 @@ The script dynamically retrieves the positions of UWB anchors from the simulatio
 The script interacts with the following topics:
 - **Subscription:**
   - `odom` (Odometry): Receives robot's movement data for prediction.
-  - `uwb_data_topic` (uwb_data): Receives UWB sensor measurements for correction.
+  - `uwb_data_topic` (UwbData): Receives UWB sensor measurements for correction.
 
 - **Publication:**
   - `localization_data_topic` (PoseWithCovarianceStamped): Publishes the estimated robot state with its covariance.
@@ -82,9 +65,9 @@ The script interacts with the following topics:
 
 ## Functions
 - **`prediction_step(self, odom_data: Odometry)`**: Updates and predicts the robot’s state based on Odometry data and publishes the estimated state.
-- **`correction_step(self, uwb_data: uwb_data)`**: Refines the robot’s state estimate using UWB data and notifies the motion planner when ready.
+- **`correction_step(self, uwb_data: UwbData)`**: Refines the robot’s state estimate using UWB data and notifies the motion planner when ready.
 - **`subscribe_odom_data(self, odom_data: Odometry)`**: Callback for Odometry data, calls `prediction_step` to update the robot’s state.
-- **`subscribe_uwb_data(self, uwb_data: uwb_data)`**: Callback for UWB data, calls `correction_step` to adjust the robot’s state estimate.
+- **`subscribe_uwb_data(self, uwb_data: UwbData)`**: Callback for UWB data, calls `correction_step` to adjust the robot’s state estimate.
 - **`publish_data(self, stamp)`**: Publishes the estimated robot state and covariance to the ROS topic.
 
 # `motion_planner.py`
@@ -122,10 +105,10 @@ The script interacts with the following topics:
 - **Subscription:**
   - `target_height` (Point): Receives target height data from local sensors.
   - `localization_data_topic` (PoseWithCovarianceStamped): Receives robot position, orientation and covariance.
-  - `/processing_data` (robot_data): Receives tags from other robots for target estimation.
+  - `/processing_data` (RobotData): Receives tags from other robots for target estimation.
 
 - **Publication:**
-  - `/processing_data` (robot_data): Publishes robot data to share with other robots.
+  - `/processing_data` (RobotData): Publishes robot data to share with other robots.
   - `target_estimate` (PoseWithCovarianceStamped): Publishes the estimated target position and height with their covariance.
 
 ## Functions

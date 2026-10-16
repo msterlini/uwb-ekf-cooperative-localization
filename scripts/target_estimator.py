@@ -1,38 +1,48 @@
 #!/usr/bin/env python3
 import numpy as np
-import rospy
-import tf.transformations
+import rclpy
 from geometry_msgs.msg import Point, PoseWithCovarianceStamped
+from rclpy.node import Node
 
-from dist_project.msg import robot_data
+from dist_project.msg import RobotData
+from dist_project.transforms import yaw_from_quaternion
 from dist_project.triangulation import estimate_height, intersect_bearings
 
 
-class TargetEstimator:
+class TargetEstimator(Node):
 
-    def __init__(self, namespace):
+    def __init__(self):
+        super().__init__('target_estimator', automatically_declare_parameters_from_overrides=True)
 
         # Initialization of variables
         self.target_height = 0
-        self.tag = robot_data()
+        self.tag = RobotData()
         self.start_publishing = 0
-        self.namespace = namespace
+        # The id of the robot is its namespace, e.g. robot0
+        self.namespace = self.get_namespace().strip('/')
 
         # Target lectures from every robot, own included, indexed by robot id
         self.robot_tags = {}
 
         # Subscritpion to global topic to publish data to share
-        self.pub_tag = rospy.Publisher("/processing_data", robot_data, queue_size=10)
+        self.pub_tag = self.create_publisher(RobotData, "/processing_data", 10)
 
         # Subscription to local topic to publish the final target estimate
-        self.pub_target = rospy.Publisher("target_estimate", PoseWithCovarianceStamped, queue_size=1)
+        self.pub_target = self.create_publisher(PoseWithCovarianceStamped, "target_estimate", 1)
 
         # Subscritpion to local topic for target height
-        self.sub_height = rospy.Subscriber("target_height", Point, self.target_callback, queue_size=1)
+        self.sub_height = self.create_subscription(Point, "target_height", self.target_callback, 1)
 
         # Subscritpion to local topic for x,y values (robot position)
-        self.sub_pos = rospy.Subscriber("localization_data_topic", PoseWithCovarianceStamped,
-                                        self.localization_callback, queue_size=1)
+        self.sub_pos = self.create_subscription(PoseWithCovarianceStamped, "localization_data_topic",
+                                                self.localization_callback, 1)
+
+        # Start self-tag publishing at a fixed rate
+        self.create_timer(1.0 / self.get_parameter("target_estimator_rate").value, self.publish_tag)
+
+    def publish_tag(self):
+        if self.start_publishing:
+            self.pub_tag.publish(self.tag)
 
     def target_callback(self, data):
         # Everytime the robots receives a new data from the local camera it uploads the current stored value for the
@@ -47,16 +57,16 @@ class TargetEstimator:
 
         pose = actual_pos.pose.pose
         q = pose.orientation
-        (roll, pitch, theta) = tf.transformations.euler_from_quaternion([q.x, q.y, q.z, q.w])
+        theta = yaw_from_quaternion(q.x, q.y, q.z, q.w)
         covariance = np.reshape(actual_pos.pose.covariance, (6, 6))
 
         # Compilation of the self-tag with all the informations, the uncertainties are standard deviations
-        tag = robot_data()
+        tag = RobotData()
         tag.robot_id = self.namespace
         tag.target_height = self.target_height
         tag.x = pose.position.x
         tag.y = pose.position.y
-        tag.theta = theta
+        tag.theta = float(theta)
         tag.sigma_x = np.sqrt(covariance[0, 0])
         tag.sigma_y = np.sqrt(covariance[1, 1])
         tag.sigma_theta = np.sqrt(covariance[5, 5])
@@ -65,7 +75,7 @@ class TargetEstimator:
         # Local variable to tell the module to start publishing
         if not self.start_publishing:
             # Subscription to global topic for communication
-            self.sub_data = rospy.Subscriber("/processing_data", robot_data, self.gather_callback, queue_size=50)
+            self.sub_data = self.create_subscription(RobotData, "/processing_data", self.gather_callback, 50)
             self.start_publishing = 1
 
     def gather_callback(self, data):
@@ -89,12 +99,12 @@ class TargetEstimator:
 
         # Composition and publishing of target estimate
         message = PoseWithCovarianceStamped()
-        message.header.stamp = rospy.Time.now()
+        message.header.stamp = self.get_clock().now().to_msg()
         message.header.frame_id = 'world'
-        message.pose.pose.position.x = p[0]
-        message.pose.pose.position.y = p[1]
-        message.pose.pose.position.z = target_z
-        message.pose.pose.orientation.w = 1
+        message.pose.pose.position.x = float(p[0])
+        message.pose.pose.position.y = float(p[1])
+        message.pose.pose.position.z = float(target_z)
+        message.pose.pose.orientation.w = 1.0
 
         covariance = np.zeros((6, 6))
         covariance[:2, :2] = cov_matrix
@@ -107,24 +117,12 @@ class TargetEstimator:
 if __name__ == '__main__':
 
     # Node initialization
-    rospy.init_node('target_estimator', anonymous=True)
-
-    # Parameters import
-    rate_val = rospy.get_param("/target_estimator_rate")
-    id = rospy.get_param('~namespace')
-    namespace = "robot" + str(id)
+    rclpy.init()
 
     # Class initialization
-    target_estimator = TargetEstimator(namespace)
-
-    # Rospy rate of node imposition
-    rate = rospy.Rate(rate_val)
+    target_estimator = TargetEstimator()
 
     try:
-        while not rospy.is_shutdown():
-            # Start self-tag publishing
-            if target_estimator.start_publishing:
-                target_estimator.pub_tag.publish(target_estimator.tag)
-            rate.sleep()
-    except rospy.ROSInterruptException:
-        rospy.loginfo("Program shutdown: Target estimator node interrupted")
+        rclpy.spin(target_estimator)
+    except KeyboardInterrupt:
+        target_estimator.get_logger().info("Program shutdown: Target estimator node interrupted")

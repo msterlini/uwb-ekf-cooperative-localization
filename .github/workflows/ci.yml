@@ -19,11 +19,11 @@ jobs:
       - run: ruff check .
       - run: pytest -q
 
-  catkin-build:
+  colcon-build:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - name: Build the ROS Noetic image (catkin_make)
-        run: docker build -t dist_project:noetic .
+      - name: Build the ROS 2 Jazzy image (colcon build)
+        run: docker build -t dist_project:jazzy .
       - name: Run the tests inside the ROS environment
-        run: docker run --rm dist_project:noetic bash -c "cd src/dist_project && python3 -m pytest -q test"
+        run: docker run --rm dist_project:jazzy bash -c "cd src/dist_project && python3 -m pytest -q test"

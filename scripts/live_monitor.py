@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 import csv
 import threading
+from functools import partial
 
 import matplotlib
 import numpy as np
-import rospy
-import tf.transformations
+import rclpy
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from matplotlib.patches import Ellipse
 from nav_msgs.msg import Odometry
+from rclpy.executors import MultiThreadedExecutor
+from rclpy.node import Node
+
+from dist_project.transforms import yaw_from_quaternion
 
 matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt  # noqa: E402
@@ -29,7 +33,7 @@ def read_coordinates(path):
 
 
 def yaw(q):
-    return tf.transformations.euler_from_quaternion([q.x, q.y, q.z, q.w])[2]
+    return yaw_from_quaternion(q.x, q.y, q.z, q.w)
 
 
 def covariance_ellipse(mean, cov, scale, **kwargs):
@@ -41,13 +45,14 @@ def covariance_ellipse(mean, cov, scale, **kwargs):
     return Ellipse(mean, width, height, angle=angle, fill=False, **kwargs)
 
 
-class LiveMonitor:
+class LiveMonitor(Node):
 
     def __init__(self):
+        super().__init__("live_monitor", automatically_declare_parameters_from_overrides=True)
         # Scene read from the same csv files used to spawn it
-        self.anchors = read_coordinates(rospy.get_param("/tag_coordinate_file"))
-        self.target = np.append(read_coordinates(rospy.get_param("/target_coordinate_file"))[0], TARGET_Z)
-        self.n_robots = len(read_coordinates(rospy.get_param("/robot_coordinate_file")))
+        self.anchors = read_coordinates(self.get_parameter("tag_coordinate_file").value)
+        self.target = np.append(read_coordinates(self.get_parameter("target_coordinate_file").value)[0], TARGET_Z)
+        self.n_robots = len(read_coordinates(self.get_parameter("robot_coordinate_file").value))
 
         # Callbacks run in other threads than the plotting
         self.lock = threading.Lock()
@@ -65,14 +70,13 @@ class LiveMonitor:
 
         for i in range(self.n_robots):
             ns = "/robot" + str(i)
-            rospy.Subscriber(ns + "/ground_truth/state", Odometry, self.gt_callback, i, queue_size=1)
-            rospy.Subscriber(ns + "/localization_data_topic", PoseWithCovarianceStamped, self.loc_callback, i,
-                             queue_size=1)
-            rospy.Subscriber(ns + "/target_estimate", PoseWithCovarianceStamped, self.target_callback,
-                             queue_size=1)
+            self.create_subscription(Odometry, ns + "/ground_truth/state", partial(self.gt_callback, i=i), 1)
+            self.create_subscription(PoseWithCovarianceStamped, ns + "/localization_data_topic",
+                                     partial(self.loc_callback, i=i), 1)
+            self.create_subscription(PoseWithCovarianceStamped, ns + "/target_estimate", self.target_callback, 1)
 
     def time(self):
-        t = rospy.get_time()
+        t = self.get_clock().now().nanoseconds * 1e-9
         if self.t0 is None:
             self.t0 = t
         return t - self.t0
@@ -115,8 +119,8 @@ class LiveMonitor:
         self.ax_target = self.fig.add_subplot(grid[1, 1])
 
         # Map limits from the room walls
-        xlim = rospy.get_param("/monitor_xlim", [-7.2, 7.8])
-        ylim = rospy.get_param("/monitor_ylim", [-4.3, 5.6])
+        xlim = [-7.2, 7.8]
+        ylim = [-4.3, 5.6]
         self.ax_map.set_xlim(xlim)
         self.ax_map.set_ylim(ylim)
         self.ax_map.set_aspect("equal")
@@ -204,11 +208,16 @@ class LiveMonitor:
 if __name__ == "__main__":
 
     # Node initialization
-    rospy.init_node("live_monitor", anonymous=True)
+    rclpy.init()
 
     # Class initialization
     monitor = LiveMonitor()
     monitor.setup()
+
+    # The callbacks are executed in a background thread, matplotlib needs the main one
+    executor = MultiThreadedExecutor()
+    executor.add_node(monitor)
+    threading.Thread(target=executor.spin, daemon=True).start()
 
     # The figure is refreshed a few times per second, the data arrive in the callbacks
     animation = FuncAnimation(monitor.fig, monitor.update, interval=300)
