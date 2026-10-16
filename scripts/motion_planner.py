@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+import numpy as np
 import rospy
-from geometry_msgs.msg import Twist, Point, Pose
+import tf.transformations
+from geometry_msgs.msg import Point, Pose, PoseWithCovarianceStamped, Twist
 
 # Constants
 TARGET_REACHED_Y_THRESHOLD = -0.5
@@ -9,12 +11,17 @@ PID_KI = 0
 PID_KD = 0.1
 FORWARD_SPEED = 0.2
 TURN_SPEED = 0.5
+# Time after which a target that is not seen anymore is considered lost
+TARGET_LOST_TIME = 1.0
+# Distance travelled in the EXPLORE state before searching again
+EXPLORE_DISTANCE = 1.5
 
 # The idea was to create a finite state machine that switch between
 # INIT -> the robot goes forward in one direction for a given amount of time until the estimation of its orientation is good enough since we don't have previous information on it
 # SEARCH -> In this state the robot turns on itself until it spots the target
 # APPROACH -> In this state the robot approaches the target and corrects the orientation with a simple PID controller
 # TARGET_REACHED -> In this state the robots stops moving and starts publishing the target height seen from its own point of view in its own camera reference frame
+# EXPLORE -> If after a full turn the target was not found the robot moves towards the center of the room and then searches again
 
 class MotionPlanner:
 
@@ -27,6 +34,14 @@ class MotionPlanner:
         # Variables for PD control
         self.integral = 0
         self.previous_error = 0
+        # Time of the last detection of the target and of the start of the search
+        self.last_blob_time = 0
+        self.search_start_time = 0
+        # Estimated pose of the robot and position where the exploration started
+        self.pose = None
+        self.explore_start = None
+        # Point towards which the robot explores, the center of the room
+        self.explore_point = np.array([rospy.get_param("/explore_point_x"), rospy.get_param("/explore_point_y")])
 
         # Topic to publish control input
         self.pub = rospy.Publisher("cmd_vel", Twist, queue_size=1)
@@ -40,10 +55,44 @@ class MotionPlanner:
         self.init_sub = rospy.Subscriber("init_move", Pose, self.init_callback)
         rospy.loginfo("<<<< Subscribed to local init_move topic =====")
 
+        # Topic of the estimated pose, used to move towards the center of the room while exploring
+        rospy.Subscriber("localization_data_topic", PoseWithCovarianceStamped, self.localization_callback, queue_size=1)
+
     def init_callback(self, data):
         # In this simple callback we unregister from the init_move topic and switch the state, it will be invoked only once
-        self.current_state = "SEARCH"
+        self.start_search()
         self.init_sub.unregister()
+
+    def start_search(self):
+        self.current_state = "SEARCH"
+        self.search_start_time = rospy.get_time()
+
+    def localization_callback(self, data):
+        pose = data.pose.pose
+        q = pose.orientation
+        theta = tf.transformations.euler_from_quaternion([q.x, q.y, q.z, q.w])[2]
+        self.pose = np.array([pose.position.x, pose.position.y, theta])
+
+        if self.current_state == "EXPLORE":
+            self.explore()
+
+    def explore(self):
+        # Once the robot travelled enough or it is close to the center of the room it searches again
+        travelled = np.linalg.norm(self.pose[:2] - self.explore_start)
+        to_point = self.explore_point - self.pose[:2]
+        if travelled > EXPLORE_DISTANCE or np.linalg.norm(to_point) < 0.5:
+            self.publish_velocity(0, 0)
+            self.start_search()
+            return
+
+        # Heading error towards the center of the room, in [-pi, pi]
+        error = (np.arctan2(to_point[1], to_point[0]) - self.pose[2] + np.pi) % (2 * np.pi) - np.pi
+
+        # As for the approach the robot moves forward only if it is already pointing in the right direction
+        if abs(error) > 0.2:
+            self.publish_velocity(0, np.clip(PID_KP * error, -TURN_SPEED, TURN_SPEED))
+        else:
+            self.publish_velocity(FORWARD_SPEED, PID_KP * error)
 
     def blob_callback(self, data):
         # This callback is called everytime a target is detected from the camera
@@ -51,8 +100,9 @@ class MotionPlanner:
         # Since we want to point directly at the target the x coordinate of the detected target in the camera ref. frame is the error
         error = -x
 
-        # We act only if we are currently searching or moving towards a target
-        if self.current_state == "SEARCH" or self.current_state == "APPROACH":
+        # We act only if we are currently searching, exploring or moving towards a target
+        if self.current_state in ("SEARCH", "EXPLORE", "APPROACH"):
+            self.last_blob_time = rospy.get_time()
             # The robot stops moving towards the target once it is close enough, this is translated in the y coordinate of the target being above a certain value chosen a priori, the sign is inverted since we are referring to the camera reference frame
             if y < TARGET_REACHED_Y_THRESHOLD:
                 # State switch
@@ -98,8 +148,19 @@ class MotionPlanner:
             # This is the command to slowly move forward until we have a good estimate of the orientation
             self.publish_velocity(0.1, 0)
         elif self.current_state == "SEARCH":
-            # If the robot is still searching for a target it's only commanded to turn on the spot
-            self.publish_velocity(0, TURN_SPEED)
+            if rospy.get_time() - self.search_start_time > 1.2 * 2 * np.pi / TURN_SPEED and self.pose is not None:
+                # After a full turn without seeing the target the robot moves towards the center of the room
+                self.current_state = "EXPLORE"
+                self.explore_start = self.pose[:2].copy()
+            else:
+                # If the robot is still searching for a target it's only commanded to turn on the spot
+                self.publish_velocity(0, TURN_SPEED)
+        elif self.current_state == "APPROACH":
+            # The gazebo plugin keeps applying the last command, if the target is lost the robot must stop and search
+            # again instead of going straight until it hits a wall
+            if rospy.get_time() - self.last_blob_time > TARGET_LOST_TIME:
+                self.publish_velocity(0, 0)
+                self.start_search()
         elif self.current_state == "TARGET_REACHED":
             # If the target is reached the robot stops and continuosly publishes the target height
             self.publish_velocity(0, 0)
