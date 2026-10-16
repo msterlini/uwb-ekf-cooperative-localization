@@ -41,7 +41,10 @@
   <param name="uwb_range_floor_std" type="double" value="0.05" />
 
   <!-- MOTION PLANNER NODE PARAMETERS -->
-  <param name="motion_planner_rate" type="int" value="1" />
+  <param name="motion_planner_rate" type="int" value="10" />
+  <!-- POINT TOWARDS WHICH A ROBOT MOVES IF IT DOESN'T SEE THE TARGET AFTER A FULL TURN (CENTER OF THE ROOM) -->
+  <param name="explore_point_x" type="double" value="0.0" />
+  <param name="explore_point_y" type="double" value="0.0" />
 
   <!-- KALMAN LOCALIZATION NODE PARAMETERS -->
   <param name="odom_rate" type="double" value="10" />

@@ -90,13 +90,14 @@ The script interacts with the following topics:
 # `motion_planner.py`
 
 ## Key Features
-This script manages robot behavior using a finite state machine (FSM), it uses PID control for target orientation and movement and it publishes velocity commands and target height data.
+This script manages robot behavior using a finite state machine (FSM): INIT (straight motion until the heading is estimated), SEARCH (turn on the spot), APPROACH (PID control towards the target), EXPLORE (if the target is not seen after a full turn, move towards the center of the room and search again) and TARGET_REACHED. If the target is lost while approaching, the robot stops and searches again. It publishes velocity commands and target height data.
 
 ## Topics
 The script interacts with the following topics:
 - **Subscription:**
   - `target/point_blob` (Point): Receives target position data to adjust movement.
   - `init_move` (Pose): Receives a signal to start the FSM process.
+  - `localization_data_topic` (PoseWithCovarianceStamped): Estimated pose, used to move towards the center of the room while exploring.
 
 - **Publication:**
   - `cmd_vel` (Twist): Publishes velocity commands to control the robot’s movement.
@@ -107,6 +108,8 @@ The script interacts with the following topics:
 - **`blob_callback(self, data)`**: Updates FSM state based on detected target position and adjusts movement.
 - **`move_towards_target(self, error)`**: Computes PID control and updates robot movement towards the target.
 - **`publish_velocity(self, linear_x, angular_z)`**: Publishes movement commands to `cmd_vel`.
+- **`localization_callback(self, data)`**: Stores the estimated pose and drives the robot while exploring.
+- **`explore(self)`**: Turns towards the center of the room and moves forward until it travelled `EXPLORE_DISTANCE`.
 - **`execute_state_machine(self)`**: Executes FSM logic to handle state transitions and actions.
 
 # `target_estimator.py`

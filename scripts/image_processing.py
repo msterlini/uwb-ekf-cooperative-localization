@@ -287,7 +287,7 @@ if __name__ == '__main__':
 
     # Filter by Area.
     params.filterByArea = True
-    params.minArea = 20
+    params.minArea = 8
     params.maxArea = 20000
 
     # Filter by Circularity
