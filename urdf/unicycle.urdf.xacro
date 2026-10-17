@@ -357,6 +357,8 @@
         <update_rate>$(arg camera_rate)</update_rate>
         <camera>
             <horizontal_fov>2</horizontal_fov>
+            <!-- The camera doesn't see the field of view drawn below -->
+            <visibility_mask>1</visibility_mask>
             <image>
                 <format>R8G8B8</format>
                 <width>640</width>
@@ -373,6 +375,36 @@
             </noise>
         </camera>
     </sensor>
+</gazebo>
+
+<!-- Field of view of the camera, drawn in Gazebo as Gazebo Classic did with visualize -->
+<link name="camera_fov_link">
+    <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+            <mesh filename="package://dist_project/mesh/camera_fov.stl" />
+        </geometry>
+    </visual>
+</link>
+
+<joint name="camera_fov_joint" type="fixed">
+    <parent link="camera_link" />
+    <child link="camera_fov_link" />
+    <origin xyz="0 0 0" rpy="0 0 0" />
+</joint>
+
+<gazebo reference="camera_fov_link">
+    <!-- Only the Gazebo view shows it, the cameras have visibility_mask 1 -->
+    <visual>
+        <cast_shadows>false</cast_shadows>
+        <transparency>0.8</transparency>
+        <visibility_flags>2</visibility_flags>
+        <material>
+            <ambient>0.3 0.6 1 1</ambient>
+            <diffuse>0.3 0.6 1 1</diffuse>
+            <emissive>0.1 0.2 0.35 1</emissive>
+        </material>
+    </visual>
 </gazebo>
 
 <link name="camera_tip_link">
