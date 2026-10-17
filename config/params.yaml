@@ -20,6 +20,9 @@
     ekf_warmup_updates: 30
     ekf_heading_window: 20
 
+    # IMAGE PROCESSING: rate of the image with the detected target shown in Gazebo, the detection uses every frame
+    image_display_rate: 10.0
+
     # MOTION PLANNER
     motion_planner_rate: 10
     # Point towards which a robot moves if it doesn't see the target after a full turn (center of the room)

@@ -31,6 +31,10 @@ class BlobDetector(Node):
         # Variable holding the point
         self.blob_point = Point()
 
+        # The image with the detected target is only displayed, so it is published at a lower rate than the camera
+        self.display_period = 1.0 / self.declare_parameter("image_display_rate", 10.0).value
+        self.last_display = -1e9
+
         # Publishing topics
         self.new_image_pub = self.create_publisher(Image, "target/image_blob", 1)
         self.blob_pub = self.create_publisher(Point, "target/point_blob", 1)
@@ -220,6 +224,23 @@ class BlobDetector(Node):
     def set_blob_params(self, blob_params):
         self._blob_params = blob_params
 
+    # Image shown in the Gazebo panels: in RGB, which the panels can show, and at half size, which is enough for the
+    # panels and lighter to send, with a thicker circle on the target and the name of the robot in the corner
+    def publish_display(self, cv_image, keypoints, rows, cols, header):
+        display = cv2.resize(cv_image, (cols // 2, rows // 2))
+        for keyPoint in keypoints:
+            cv2.circle(display, (int(keyPoint.pt[0] / 2), int(keyPoint.pt[1] / 2)), int(keyPoint.size / 4) + 3,
+                       (0, 0, 255), 2, cv2.LINE_AA)
+        for color, thickness in (((0, 0, 0), 4), ((255, 255, 255), 2)):
+            cv2.putText(display, self.get_namespace().strip('/'), (8, 24), cv2.FONT_HERSHEY_SIMPLEX, 0.7,
+                        color, thickness, cv2.LINE_AA)
+        try:
+            msg = self.bridge.cv2_to_imgmsg(cv2.cvtColor(display, cv2.COLOR_BGR2RGB), "rgb8")
+            msg.header = header
+            self.new_image_pub.publish(msg)
+        except CvBridgeError as e:
+            print(e)
+
     def callback(self, data):
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
@@ -231,25 +252,15 @@ class BlobDetector(Node):
             # Detect blobs
             keypoints, mask = self.blob_detect(cv_image, self._threshold[0], self._threshold[1], self._blur,
                                                blob_params=self._blob_params, search_window=self.detection_window)
-            # Draw search window and blobs
-            cv_image = self.blur_outside(cv_image, 10, self.detection_window)
-            cv_image = self.draw_window(cv_image, self.detection_window, line=1)
-            cv_image = self.draw_frame(cv_image)
-            cv_image = self.draw_keypoints(cv_image, keypoints)
-
-            # The image is only displayed: I publish it in RGB, which the Gazebo panels can show, and at half size,
-            # which is enough for the panels and lighter to send, with the name of the robot in the corner
-            display = cv2.resize(cv_image, (cols // 2, rows // 2))
-            for keyPoint in keypoints:
-                cv2.circle(display, (int(keyPoint.pt[0] / 2), int(keyPoint.pt[1] / 2)), int(keyPoint.size / 4) + 3,
-                           (0, 0, 255), 2, cv2.LINE_AA)
-            for color, thickness in (((0, 0, 0), 4), ((255, 255, 255), 2)):
-                cv2.putText(display, self.get_namespace().strip('/'), (8, 24), cv2.FONT_HERSHEY_SIMPLEX, 0.7,
-                            color, thickness, cv2.LINE_AA)
-            try:
-                self.new_image_pub.publish(self.bridge.cv2_to_imgmsg(cv2.cvtColor(display, cv2.COLOR_BGR2RGB), "rgb8"))
-            except CvBridgeError as e:
-                print(e)
+            # Image for the Gazebo panels at the display rate, with search window and blobs drawn
+            stamp = data.header.stamp.sec + data.header.stamp.nanosec * 1e-9
+            if stamp - self.last_display >= self.display_period:
+                self.last_display = stamp
+                drawn = self.blur_outside(cv_image, 10, self.detection_window)
+                drawn = self.draw_window(drawn, self.detection_window, line=1)
+                drawn = self.draw_frame(drawn)
+                drawn = self.draw_keypoints(drawn, keypoints)
+                self.publish_display(drawn, keypoints, rows, cols, data.header)
 
             for i, keyPoint in enumerate(keypoints):
                 # Here you can implement some tracking algorithm to filter multiple detections
