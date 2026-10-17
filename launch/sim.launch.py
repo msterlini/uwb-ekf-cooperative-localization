@@ -63,7 +63,7 @@ def generate_launch_description():
         DeclareLaunchArgument('bag_dir', default_value='bagfiles'),
         DeclareLaunchArgument('overview_camera', default_value='false',
                               description='Fixed camera above the room on /overview_camera/image_raw'),
-        DeclareLaunchArgument('camera_rate', default_value='30',
+        DeclareLaunchArgument('camera_rate', default_value='10',
                               description='Frame rate of the robot cameras, lower it (e.g. 5) without a GPU'),
     ]
 
