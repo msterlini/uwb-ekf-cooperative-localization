@@ -105,7 +105,7 @@ cd uwb-ekf-cooperative-localization
 
 The ROS images exist only for x86-64: on Apple Silicon Docker Desktop runs them through emulation, which works but is slower.
 
-`run.sh` detects the GPU and adds the matching override in [`docker/`](docker): NVIDIA (requires [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)) or AMD/Intel through Mesa; without a GPU Gazebo renders on the CPU, which works but is slower. `GPU=nvidia|dri|none ./run.sh` forces a choice. The browser and headless modes run on a virtual display and always render on the CPU.
+`run.sh` detects the GPU and adds the matching override in [`docker/`](docker): NVIDIA (requires [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)) or AMD/Intel through Mesa; without a GPU Gazebo renders on the CPU, which works but is slower. `GPU=nvidia|dri|none ./run.sh` forces a choice. The browser and headless modes run on a virtual display and always render on the CPU: the browser desktop shows only the live monitor, with the robot cameras at 5 Hz, and `GAZEBO_GUI=true ./run.sh web` adds the Gazebo window, much slower.
 
 ### Headless runs and results
 
@@ -124,7 +124,7 @@ python3 plots/scripts/uncertainty.py bagfiles/my_run --save
 
 The bags are recorded in MCAP format; the analysis scripts read them with [rosbags](https://gitlab.com/ternaris/rosbags), which also reads the ROS 1 bags of the report and needs no ROS installation.
 
-Launch arguments of `sim.launch.py`: `gui` (default `true`), `monitor` (live monitor, default `true`), `record`, `bag_name`, `bag_dir`, `overview_camera` (fixed camera above the room on `/overview_camera/image_raw`), `camera_rate` (frame rate of the robot cameras, default 10, enough for the motion planner that runs at 10 Hz; Gazebo Harmonic renders the cameras in lockstep with the physics, so a higher rate slows the simulation down). All the parameters of the filter and of the sensors are in [`config/params.yaml`](config/params.yaml).
+Launch arguments of `sim.launch.py`: `gui` (default `true`), `gazebo_gui` (Gazebo window, default `true`; `false` keeps only the live monitor), `monitor` (live monitor, default `true`), `record`, `bag_name`, `bag_dir`, `overview_camera` (fixed camera above the room on `/overview_camera/image_raw`), `camera_rate` (frame rate of the robot cameras, default 10, enough for the motion planner that runs at 10 Hz; Gazebo Harmonic renders the cameras in lockstep with the physics, so a higher rate slows the simulation down). All the parameters of the filter and of the sensors are in [`config/params.yaml`](config/params.yaml).
 
 ### Changing the scenario
 
