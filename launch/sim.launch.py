@@ -146,7 +146,8 @@ def generate_launch_description():
         cmd=['ros2', 'bag', 'record', '--use-sim-time', '-s', 'mcap', '--storage-preset-profile', 'zstd_fast', '-o',
              PathJoinSubstitution([LaunchConfiguration('bag_dir'), LaunchConfiguration('bag_name')]),
              '--regex', '.*/(localization_data_topic|ground_truth/state|target_estimate)'],
-        condition=IfCondition(record), output='log')
+        # The recorder needs time to compress and close the bag when the simulation is stopped
+        condition=IfCondition(record), output='log', sigterm_timeout='60', sigkill_timeout='10')
 
     return LaunchDescription(arguments + [
         resources, gazebo, clock_bridge, clock_throttle, bridge, blob_bridge, overview_bridge, *entities, *anchors, recorder,
