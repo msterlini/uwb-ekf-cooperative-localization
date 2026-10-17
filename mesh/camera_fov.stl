@@ -1,0 +1,58 @@
+solid camera_fov
+ facet normal 0.759639 0.000000 -0.650345
+  outer loop
+   vertex 0.000000 0.000000 0.000000
+   vertex 0.800000 1.245926 0.934445
+   vertex 0.800000 -1.245926 0.934445
+  endloop
+ endfacet
+ facet normal -0.759639 0.000000 0.650345
+  outer loop
+   vertex 0.000000 0.000000 0.000000
+   vertex 0.800000 -1.245926 0.934445
+   vertex 0.800000 1.245926 0.934445
+  endloop
+ endfacet
+ facet normal 0.841471 0.540302 0.000000
+  outer loop
+   vertex 0.000000 0.000000 0.000000
+   vertex 0.800000 -1.245926 0.934445
+   vertex 0.800000 -1.245926 -0.934445
+  endloop
+ endfacet
+ facet normal -0.841471 -0.540302 0.000000
+  outer loop
+   vertex 0.000000 0.000000 0.000000
+   vertex 0.800000 -1.245926 -0.934445
+   vertex 0.800000 -1.245926 0.934445
+  endloop
+ endfacet
+ facet normal 0.759639 0.000000 0.650345
+  outer loop
+   vertex 0.000000 0.000000 0.000000
+   vertex 0.800000 -1.245926 -0.934445
+   vertex 0.800000 1.245926 -0.934445
+  endloop
+ endfacet
+ facet normal -0.759639 0.000000 -0.650345
+  outer loop
+   vertex 0.000000 0.000000 0.000000
+   vertex 0.800000 1.245926 -0.934445
+   vertex 0.800000 -1.245926 -0.934445
+  endloop
+ endfacet
+ facet normal 0.841471 -0.540302 0.000000
+  outer loop
+   vertex 0.000000 0.000000 0.000000
+   vertex 0.800000 1.245926 -0.934445
+   vertex 0.800000 1.245926 0.934445
+  endloop
+ endfacet
+ facet normal -0.841471 0.540302 0.000000
+  outer loop
+   vertex 0.000000 0.000000 0.000000
+   vertex 0.800000 1.245926 0.934445
+   vertex 0.800000 1.245926 -0.934445
+  endloop
+ endfacet
+endsolid camera_fov

@@ -100,13 +100,19 @@ def generate_launch_description():
                for i, (x, y) in enumerate(tags)]
 
     # Bridge between Gazebo and ROS topics: commands in, odometry, ground truth and camera out
-    topics = ['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock']
+    topics = []
     for name in robot_names:
         topics += ['/{}/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist'.format(name),
                    '/{}/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry'.format(name),
                    '/{}/ground_truth/state@nav_msgs/msg/Odometry[gz.msgs.Odometry'.format(name),
                    '/{}/camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image'.format(name)]
     bridge = Node(package='ros_gz_bridge', executable='parameter_bridge', arguments=topics, output='log')
+    # Gazebo publishes the clock at every physics step (1 kHz): I give the nodes a 100 Hz clock,
+    # otherwise every node spends its time reading the clock and the simulation slows down
+    clock_bridge = Node(package='ros_gz_bridge', executable='parameter_bridge', name='clock_bridge', output='log',
+                        arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'], remappings=[('/clock', '/gz_clock')])
+    clock_throttle = Node(package='topic_tools', executable='throttle', name='clock_throttle', output='log',
+                          arguments=['messages', '/gz_clock', '100', '/clock'])
     overview_bridge = Node(package='ros_gz_bridge', executable='parameter_bridge', output='log',
                            condition=IfCondition(overview_camera),
                            arguments=['/overview_camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image'])
@@ -136,6 +142,6 @@ def generate_launch_description():
         condition=IfCondition(record), output='log')
 
     return LaunchDescription(arguments + [
-        resources, gazebo, bridge, overview_bridge, *entities, *anchors, recorder,
+        resources, gazebo, clock_bridge, clock_throttle, bridge, overview_bridge, *entities, *anchors, recorder,
         TimerAction(period=INITIALIZATION_TIME, actions=robot_nodes + viewers),
     ])
