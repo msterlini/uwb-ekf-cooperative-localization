@@ -51,12 +51,15 @@ def generate_launch_description():
     robot_names = ['robot' + str(i) for i in range(len(robots))]
 
     gui = LaunchConfiguration('gui')
+    gazebo_gui = LaunchConfiguration('gazebo_gui')
     monitor = LaunchConfiguration('monitor')
     record = LaunchConfiguration('record')
     overview_camera = LaunchConfiguration('overview_camera')
 
     arguments = [
         DeclareLaunchArgument('gui', default_value='true', description='Gazebo GUI with the robot cameras and live monitor'),
+        DeclareLaunchArgument('gazebo_gui', default_value='true',
+                              description='Gazebo window, false keeps only the live monitor (faster without a GPU)'),
         DeclareLaunchArgument('monitor', default_value='true', description='Live view of map, estimates and errors'),
         DeclareLaunchArgument('record', default_value='false', description='Record a bag of the estimates'),
         DeclareLaunchArgument('bag_name', default_value='run'),
@@ -75,8 +78,9 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(get_package_share_directory('ros_gz_sim'), 'launch', 'gz_sim.launch.py')),
         launch_arguments={
-            'gz_args': PythonExpression(["'-r ' + ('' if '", gui, "' == 'true' else '-s ') + '",
-                                         os.path.join(share, 'worlds', 'room.world'), "'"]),
+            'gz_args': PythonExpression(["'-r ' + ('' if '", gui, "' == 'true' and '", gazebo_gui,
+                                         "' == 'true' else '-s ') + '", os.path.join(share, 'worlds', 'room.world'),
+                                         "'"]),
             'on_exit_shutdown': 'true',
         }.items())
 
@@ -115,7 +119,7 @@ def generate_launch_description():
                           arguments=['messages', '/gz_clock', '100', '/clock'])
     # Images with the detected target, shown in the panels of the Gazebo window
     blob_bridge = Node(package='ros_gz_bridge', executable='parameter_bridge', name='blob_bridge', output='log',
-                       condition=IfCondition(gui),
+                       condition=IfCondition(PythonExpression(["'", gui, "' == 'true' and '", gazebo_gui, "' == 'true'"])),
                        arguments=['/{}/target/image_blob@sensor_msgs/msg/Image]gz.msgs.Image'.format(name)
                                   for name in robot_names])
     overview_bridge = Node(package='ros_gz_bridge', executable='parameter_bridge', output='log',
