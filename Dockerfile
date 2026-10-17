@@ -4,6 +4,7 @@ FROM osrf/ros:jazzy-desktop-full
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
         python3-pytest \
+        ros-jazzy-topic-tools \
         xvfb \
         x11vnc novnc websockify fluxbox \
     && rm -rf /var/lib/apt/lists/*
