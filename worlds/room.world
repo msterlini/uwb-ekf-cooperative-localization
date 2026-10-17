@@ -50,7 +50,7 @@
       </link>
     </model>
 
-    <!-- Graphical interface: only the 3D view from above the room, with play/pause and statistics -->
+    <!-- Graphical interface: 3D view from above the room, with play/pause and statistics, and the robot cameras -->
     <gui fullscreen="0">
       <plugin filename="MinimalScene" name="3D View">
         <gz-gui>
@@ -127,6 +127,52 @@
         <real_time>true</real_time>
         <real_time_factor>true</real_time_factor>
         <iterations>true</iterations>
+      </plugin>
+      <!-- Images of the robot cameras with the detected target, one panel each on the side of the 3D view -->
+      <plugin filename="ImageDisplay" name="Camera robot0">
+        <gz-gui>
+          <title>robot0</title>
+          <property type="bool" key="showTitleBar">true</property>
+          <property type="string" key="state">docked</property>
+        </gz-gui>
+        <topic>/robot0/target/image_blob</topic>
+        <topic_picker>false</topic_picker>
+      </plugin>
+      <plugin filename="ImageDisplay" name="Camera robot1">
+        <gz-gui>
+          <title>robot1</title>
+          <property type="bool" key="showTitleBar">true</property>
+          <property type="string" key="state">docked</property>
+        </gz-gui>
+        <topic>/robot1/target/image_blob</topic>
+        <topic_picker>false</topic_picker>
+      </plugin>
+      <plugin filename="ImageDisplay" name="Camera robot2">
+        <gz-gui>
+          <title>robot2</title>
+          <property type="bool" key="showTitleBar">true</property>
+          <property type="string" key="state">docked</property>
+        </gz-gui>
+        <topic>/robot2/target/image_blob</topic>
+        <topic_picker>false</topic_picker>
+      </plugin>
+      <plugin filename="ImageDisplay" name="Camera robot3">
+        <gz-gui>
+          <title>robot3</title>
+          <property type="bool" key="showTitleBar">true</property>
+          <property type="string" key="state">docked</property>
+        </gz-gui>
+        <topic>/robot3/target/image_blob</topic>
+        <topic_picker>false</topic_picker>
+      </plugin>
+      <plugin filename="ImageDisplay" name="Camera robot4">
+        <gz-gui>
+          <title>robot4</title>
+          <property type="bool" key="showTitleBar">true</property>
+          <property type="string" key="state">docked</property>
+        </gz-gui>
+        <topic>/robot4/target/image_blob</topic>
+        <topic_picker>false</topic_picker>
       </plugin>
     </gui>
 

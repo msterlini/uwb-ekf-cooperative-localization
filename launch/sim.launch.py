@@ -56,7 +56,7 @@ def generate_launch_description():
     overview_camera = LaunchConfiguration('overview_camera')
 
     arguments = [
-        DeclareLaunchArgument('gui', default_value='true', description='Gazebo GUI, camera viewer and live monitor'),
+        DeclareLaunchArgument('gui', default_value='true', description='Gazebo GUI with the robot cameras and live monitor'),
         DeclareLaunchArgument('monitor', default_value='true', description='Live view of map, estimates and errors'),
         DeclareLaunchArgument('record', default_value='false', description='Record a bag of the estimates'),
         DeclareLaunchArgument('bag_name', default_value='run'),
@@ -113,6 +113,11 @@ def generate_launch_description():
                         arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'], remappings=[('/clock', '/gz_clock')])
     clock_throttle = Node(package='topic_tools', executable='throttle', name='clock_throttle', output='log',
                           arguments=['messages', '/gz_clock', '100', '/clock'])
+    # Images with the detected target, shown in the panels of the Gazebo window
+    blob_bridge = Node(package='ros_gz_bridge', executable='parameter_bridge', name='blob_bridge', output='log',
+                       condition=IfCondition(gui),
+                       arguments=['/{}/target/image_blob@sensor_msgs/msg/Image]gz.msgs.Image'.format(name)
+                                  for name in robot_names])
     overview_bridge = Node(package='ros_gz_bridge', executable='parameter_bridge', output='log',
                            condition=IfCondition(overview_camera),
                            arguments=['/overview_camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image'])
@@ -126,8 +131,6 @@ def generate_launch_description():
                                     parameters=[params], output='log'))
 
     viewers = [
-        Node(package='rqt_image_view', executable='rqt_image_view', name='camera_blob_viewer',
-             arguments=['/robot1/target/image_blob'], condition=IfCondition(gui)),
         Node(package=PACKAGE, executable='live_monitor.py', output='log',
              parameters=[params, {'tag_coordinate_file': coordinates['tag'],
                                   'target_coordinate_file': coordinates['target'],
@@ -142,6 +145,6 @@ def generate_launch_description():
         condition=IfCondition(record), output='log')
 
     return LaunchDescription(arguments + [
-        resources, gazebo, clock_bridge, clock_throttle, bridge, overview_bridge, *entities, *anchors, recorder,
+        resources, gazebo, clock_bridge, clock_throttle, bridge, blob_bridge, overview_bridge, *entities, *anchors, recorder,
         TimerAction(period=INITIALIZATION_TIME, actions=robot_nodes + viewers),
     ])
