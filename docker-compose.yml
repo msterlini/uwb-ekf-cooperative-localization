@@ -10,6 +10,12 @@ services:
     image: dist_project:jazzy
     ports:
       - "6080:6080"
+    environment:
+      # Each mode is isolated: ROS and Gazebo discover only the processes of the same container,
+      # so two simulations started together don't mix their topics
+      - ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
+      - GZ_IP=127.0.0.1
+      - GZ_PARTITION=web
     shm_size: 1gb
     volumes:
       - ./bagfiles:/ros2_ws/src/dist_project/bagfiles
@@ -22,6 +28,9 @@ services:
     environment:
       - DISPLAY=${DISPLAY}
       - QT_X11_NO_MITSHM=1
+      - ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
+      - GZ_IP=127.0.0.1
+      - GZ_PARTITION=sim
     shm_size: 1gb
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
@@ -32,6 +41,10 @@ services:
     build: .
     working_dir: /ros2_ws/src/dist_project
     image: dist_project:jazzy
+    environment:
+      - ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
+      - GZ_IP=127.0.0.1
+      - GZ_PARTITION=headless
     shm_size: 1gb
     volumes:
       - ./bagfiles:/ros2_ws/src/dist_project/bagfiles
