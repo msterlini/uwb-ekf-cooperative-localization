@@ -16,7 +16,7 @@
 
     <scene>
       <ambient>0.5 0.5 0.5 1</ambient>
-      <background>0.86 0.89 0.93 1</background>
+      <background>0.02 0.025 0.035 1</background>
       <shadows>true</shadows>
       <grid>false</grid>
     </scene>
@@ -43,8 +43,8 @@
             <plane><normal>0 0 1</normal><size>40 40</size></plane>
           </geometry>
           <material>
-            <ambient>0.25 0.25 0.25 1</ambient>
-            <diffuse>0.25 0.25 0.25 1</diffuse>
+            <ambient>0.04 0.04 0.045 1</ambient>
+            <diffuse>0.04 0.04 0.045 1</diffuse>
           </material>
         </visual>
       </link>
@@ -61,7 +61,7 @@
         <engine>ogre2</engine>
         <scene>scene</scene>
         <ambient_light>0.4 0.4 0.4</ambient_light>
-        <background_color>0.86 0.89 0.93</background_color>
+        <background_color>0.02 0.025 0.035</background_color>
         <camera_pose>0.3 -6.2 10 0 1.0 1.5708</camera_pose>
       </plugin>
       <plugin filename="GzSceneManager" name="Scene Manager">
@@ -113,6 +113,8 @@
         <gz-gui>
           <title>World stats</title>
           <property type="bool" key="showTitleBar">false</property>
+          <!-- Light background, so that the statistics are readable on the dark scene -->
+          <property type="string" key="cardBackground">#e0e0e0</property>
           <property type="bool" key="resizable">false</property>
           <property type="double" key="height">110</property>
           <property type="double" key="width">290</property>

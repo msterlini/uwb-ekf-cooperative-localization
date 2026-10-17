@@ -124,7 +124,7 @@ python3 plots/scripts/uncertainty.py bagfiles/my_run --save
 
 The bags are recorded in MCAP format; the analysis scripts read them with [rosbags](https://gitlab.com/ternaris/rosbags), which also reads the ROS 1 bags of the report and needs no ROS installation.
 
-Launch arguments of `sim.launch.py`: `gui` (default `true`), `monitor` (live monitor, default `true`), `record`, `bag_name`, `bag_dir`, `overview_camera` (fixed camera above the room on `/overview_camera/image_raw`), `camera_rate` (frame rate of the robot cameras, default 30; Gazebo Harmonic renders the cameras in lockstep with the physics, so without a GPU a lower rate keeps the simulation fast, and `run.sh` uses 10 in that case). All the parameters of the filter and of the sensors are in [`config/params.yaml`](config/params.yaml).
+Launch arguments of `sim.launch.py`: `gui` (default `true`), `monitor` (live monitor, default `true`), `record`, `bag_name`, `bag_dir`, `overview_camera` (fixed camera above the room on `/overview_camera/image_raw`), `camera_rate` (frame rate of the robot cameras, default 10, enough for the motion planner that runs at 10 Hz; Gazebo Harmonic renders the cameras in lockstep with the physics, so a higher rate slows the simulation down). All the parameters of the filter and of the sensors are in [`config/params.yaml`](config/params.yaml).
 
 ### Changing the scenario
 
