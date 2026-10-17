@@ -31,7 +31,7 @@ The script interacts with the following topics:
 - **Subscription**:
   - `camera/image_raw`: Subscribes to the raw image stream from the robot's camera.
 - **Publication**:
-  - `target/image_blob`: Publishes the processed image with detected blobs.
+  - `target/image_blob`: Publishes the processed image with detected blobs, at half size, shown in the Gazebo window.
   - `target/point_blob`: Publishes the coordinates of the detected blob.
 
 ## Functions
