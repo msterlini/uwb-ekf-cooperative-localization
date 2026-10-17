@@ -128,48 +128,78 @@
         <real_time_factor>true</real_time_factor>
         <iterations>true</iterations>
       </plugin>
-      <!-- Images of the robot cameras with the detected target, one panel each on the side of the 3D view -->
+      <!-- Images of the robot cameras with the detected target, in a column on the left of the 3D view -->
       <plugin filename="ImageDisplay" name="Camera robot0">
         <gz-gui>
-          <title>robot0</title>
-          <property type="bool" key="showTitleBar">true</property>
-          <property type="string" key="state">docked</property>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="bool" key="resizable">true</property>
+          <property type="string" key="cardBackground">#303030</property>
+          <property type="double" key="x">5</property>
+          <property type="double" key="y">5</property>
+          <property type="double" key="width">220</property>
+          <property type="double" key="height">170</property>
+          <property type="double" key="z">1</property>
+          <property type="string" key="state">floating</property>
         </gz-gui>
         <topic>/robot0/target/image_blob</topic>
         <topic_picker>false</topic_picker>
       </plugin>
       <plugin filename="ImageDisplay" name="Camera robot1">
         <gz-gui>
-          <title>robot1</title>
-          <property type="bool" key="showTitleBar">true</property>
-          <property type="string" key="state">docked</property>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="bool" key="resizable">true</property>
+          <property type="string" key="cardBackground">#303030</property>
+          <property type="double" key="x">5</property>
+          <property type="double" key="y">177</property>
+          <property type="double" key="width">220</property>
+          <property type="double" key="height">170</property>
+          <property type="double" key="z">1</property>
+          <property type="string" key="state">floating</property>
         </gz-gui>
         <topic>/robot1/target/image_blob</topic>
         <topic_picker>false</topic_picker>
       </plugin>
       <plugin filename="ImageDisplay" name="Camera robot2">
         <gz-gui>
-          <title>robot2</title>
-          <property type="bool" key="showTitleBar">true</property>
-          <property type="string" key="state">docked</property>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="bool" key="resizable">true</property>
+          <property type="string" key="cardBackground">#303030</property>
+          <property type="double" key="x">5</property>
+          <property type="double" key="y">349</property>
+          <property type="double" key="width">220</property>
+          <property type="double" key="height">170</property>
+          <property type="double" key="z">1</property>
+          <property type="string" key="state">floating</property>
         </gz-gui>
         <topic>/robot2/target/image_blob</topic>
         <topic_picker>false</topic_picker>
       </plugin>
       <plugin filename="ImageDisplay" name="Camera robot3">
         <gz-gui>
-          <title>robot3</title>
-          <property type="bool" key="showTitleBar">true</property>
-          <property type="string" key="state">docked</property>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="bool" key="resizable">true</property>
+          <property type="string" key="cardBackground">#303030</property>
+          <property type="double" key="x">5</property>
+          <property type="double" key="y">521</property>
+          <property type="double" key="width">220</property>
+          <property type="double" key="height">170</property>
+          <property type="double" key="z">1</property>
+          <property type="string" key="state">floating</property>
         </gz-gui>
         <topic>/robot3/target/image_blob</topic>
         <topic_picker>false</topic_picker>
       </plugin>
       <plugin filename="ImageDisplay" name="Camera robot4">
         <gz-gui>
-          <title>robot4</title>
-          <property type="bool" key="showTitleBar">true</property>
-          <property type="string" key="state">docked</property>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="bool" key="resizable">true</property>
+          <property type="string" key="cardBackground">#303030</property>
+          <property type="double" key="x">5</property>
+          <property type="double" key="y">693</property>
+          <property type="double" key="width">220</property>
+          <property type="double" key="height">170</property>
+          <property type="double" key="z">1</property>
+          <property type="string" key="state">floating</property>
         </gz-gui>
         <topic>/robot4/target/image_blob</topic>
         <topic_picker>false</topic_picker>

@@ -237,8 +237,17 @@ class BlobDetector(Node):
             cv_image = self.draw_frame(cv_image)
             cv_image = self.draw_keypoints(cv_image, keypoints)
 
+            # The image is only displayed: I publish it in RGB, which the Gazebo panels can show, and at half size,
+            # which is enough for the panels and lighter to send, with the name of the robot in the corner
+            display = cv2.resize(cv_image, (cols // 2, rows // 2))
+            for keyPoint in keypoints:
+                cv2.circle(display, (int(keyPoint.pt[0] / 2), int(keyPoint.pt[1] / 2)), int(keyPoint.size / 4) + 3,
+                           (0, 0, 255), 2, cv2.LINE_AA)
+            for color, thickness in (((0, 0, 0), 4), ((255, 255, 255), 2)):
+                cv2.putText(display, self.get_namespace().strip('/'), (8, 24), cv2.FONT_HERSHEY_SIMPLEX, 0.7,
+                            color, thickness, cv2.LINE_AA)
             try:
-                self.new_image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
+                self.new_image_pub.publish(self.bridge.cv2_to_imgmsg(cv2.cvtColor(display, cv2.COLOR_BGR2RGB), "rgb8"))
             except CvBridgeError as e:
                 print(e)
 

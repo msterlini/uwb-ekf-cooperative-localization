@@ -65,7 +65,7 @@ Compared with the ROS 1 version (position RMSE 1–2 cm, target error 6.4 cm) th
 
 ## Running the simulation
 
-The simulation opens Gazebo, the camera of a robot with the detected target and a live monitor of the estimates: map with true and estimated trajectories, covariance ellipses and the cooperative target estimate, plus the localization and target errors over time.
+The simulation opens Gazebo, with the cameras of the robots and the detected target on the left, and a live monitor of the estimates: map with true and estimated trajectories, covariance ellipses and the cooperative target estimate, plus the localization and target errors over time.
 
 In Gazebo the blue cones are the fields of view of the robot cameras; the arrow at the bottom right expands the real time factor into simulation and real time.
 
