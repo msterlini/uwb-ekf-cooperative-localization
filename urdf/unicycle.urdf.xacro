@@ -5,7 +5,7 @@
 <xacro:arg name="robot_name" default="robot0" />
 <xacro:property name="robot_name" value="$(arg robot_name)" />
 <!-- Frame rate of the camera, it can be lowered when Gazebo renders without a GPU -->
-<xacro:arg name="camera_rate" default="30" />
+<xacro:arg name="camera_rate" default="10" />
 
 <!-- Defining the colors used in this robot -->
 <material name="Black">

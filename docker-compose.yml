@@ -1,5 +1,5 @@
 # Use ./run.sh, which picks the GPU override in docker/ (see the README).
-# Without a GPU Gazebo renders on the CPU: CAMERA_RATE lowers the frame rate of the robot cameras.
+# CAMERA_RATE sets the frame rate of the robot cameras (default 10 Hz).
 # Desktop in the browser (any OS):   docker compose up web   ->  http://localhost:6080/vnc.html
 # Headless run that records a bag:   DURATION=300 BAG_NAME=my_run docker compose run --rm headless
 services:
@@ -25,7 +25,7 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ./bagfiles:/ros2_ws/src/dist_project/bagfiles
-    command: ros2 launch dist_project sim.launch.py camera_rate:=${CAMERA_RATE:-30}
+    command: ros2 launch dist_project sim.launch.py camera_rate:=${CAMERA_RATE:-10}
 
   headless:
     build: .

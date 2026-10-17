@@ -46,8 +46,7 @@ case "$service" in
         case "$gpu" in
             nvidia) files+=(-f docker/compose.nvidia.yml); echo "GPU: NVIDIA" ;;
             dri)    files+=(-f docker/compose.dri.yml);    echo "GPU: AMD/Intel (Mesa)" ;;
-            none)   echo "GPU: none, software rendering (the simulation will be slower)"
-                    export CAMERA_RATE="${CAMERA_RATE:-10}" ;;
+            none)   echo "GPU: none, software rendering (the simulation will be slower)" ;;
             *)      echo "Unknown GPU=$gpu, use nvidia, dri or none" >&2; exit 1 ;;
         esac
         exec docker compose "${files[@]}" up sim
