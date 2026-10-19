@@ -1,50 +1,29 @@
-# Multi-robot UWB localization and cooperative target estimation
+# Multi-robot UWB localization and cooperative target estimation (ROS 1)
 
-[![CI](https://github.com/msterlini/uwb-ekf-cooperative-localization/actions/workflows/ci.yml/badge.svg)](https://github.com/msterlini/uwb-ekf-cooperative-localization/actions/workflows/ci.yml)
+[![CI](https://github.com/msterlini/uwb-ekf-cooperative-localization/actions/workflows/ci.yml/badge.svg?branch=ros1)](https://github.com/msterlini/uwb-ekf-cooperative-localization/actions/workflows/ci.yml)
 ![ROS Noetic](https://img.shields.io/badge/ROS-Noetic-22314E)
 ![Gazebo 11](https://img.shields.io/badge/Gazebo-11-orange)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A ROS/Gazebo simulation of a team of unicycle robots in an indoor room. Each robot localizes itself with an **Extended Kalman Filter** that fuses wheel odometry with **UWB ranges** to anchors on the ceiling, then searches a target with its camera. The robots that reach the target share their pose and uncertainty, and every robot fuses them into a **3-D estimate of the target position**.
+Five unicycle robots in a room localize themselves with an **Extended Kalman Filter** that fuses wheel odometry with **UWB ranges** to anchors on the ceiling, search a target with their cameras and fuse their bearings into a **3-D estimate of the target position**.
 
-Project of the course *Distributed Estimation for Robots and Vehicles* (2024). The full report, *Distributed unicycle system for the estimation of the 3D position of a target*, is in [`docs/report.pdf`](docs/report.pdf).
+Project of the course *Distributed Estimation for Robots and Vehicles* (2024), report in [`docs/report.pdf`](docs/report.pdf). This is the original ROS 1 Noetic / Gazebo Classic version; the current ROS 2 Jazzy / Gazebo Harmonic version is on [`main`](https://github.com/msterlini/uwb-ekf-cooperative-localization).
 
 ![Simulation](docs/demo.gif)
 
-*Overview camera of a run: estimated trajectories of the five robots (coloured trails) and cooperative estimate of the target (yellow cross).*
-
 ## How it works
 
-```mermaid
-flowchart LR
-    subgraph robot_i["robot i (one namespace per robot)"]
-        GZ[Gazebo<br/>odometry, camera, ground truth] -->|odom| KF[kalman_localization<br/>EKF]
-        GZ -->|ground_truth| UWB[uwb_dist_sim<br/>noisy ranges]
-        UWB -->|uwb_data_topic| KF
-        GZ -->|camera| IP[image_processing<br/>yellow blob detection]
-        IP -->|target/point_blob| MP[motion_planner<br/>search, approach, stop]
-        KF -->|init_move| MP
-        MP -->|cmd_vel| GZ
-        MP -->|target_height| TE[target_estimator]
-        KF -->|localization_data_topic| TE
-    end
-    TE <-->|/processing_data<br/>pose + uncertainty of every robot| OTHERS[other robots]
-    TE -->|target_estimate| OUT((x, y, z ± σ))
-```
+**Localization.** The state of each robot is $(x, y, \theta)$. The prediction uses the unicycle model driven by the odometry increments, the correction the distances to the UWB anchors, with a noise that grows with the distance. The ranges say nothing about $\theta$ while the robot is still, so the heading is first taken from the travelled direction and then corrected only while the robot moves.
 
-**Ego-localization.** The state of each robot is $(x, y, \theta)$. The prediction step uses the unicycle model driven by the odometry increments; the correction step uses the distances $d_j = \lVert p - a_j \rVert$ to the UWB anchors $a_j$, whose noise grows with the distance ($\sigma_j = \sigma_0 + k\, d_j$). The ranges carry no information on $\theta$ while the robot is still, so the heading is first taken from the travelled direction and then corrected only while the robot moves.
-
-**Target estimation.** A robot that reached the target is stopped and points at it, so the target lies on its bearing line $-\sin\theta_i\, x + \cos\theta_i\, y = -\sin\theta_i\, x_i + \cos\theta_i\, y_i$. The planar position is the weighted least-squares intersection of the lines of all the robots, each weighted with the uncertainty of the robot pose propagated to the line; the height comes from the elevation at which every camera sees the target.
+**Target estimation.** A robot that reached the target points at it, so the target lies on its bearing line. The planar position is the weighted least-squares intersection of the lines of all the robots, weighted with the pose uncertainty of each robot; the height comes from the elevation at which each camera sees the target.
 
 ![How it works](docs/animation.gif)
 
-*Illustration made from the recorded run: EKF localization of one robot, with the range corrections from the anchors and the 2-σ ellipse (×10), then the bearing lines of the five robots and their weighted least-squares intersection, next to the true target. Made with [Manim](https://www.manim.community/).*
-
 ## Results
 
-Run of 5 robots and 6 anchors recorded in [`bagfiles/total_bag.bag`](bagfiles), evaluated against the Gazebo ground truth with [`plots/scripts/uncertainty.py`](plots/scripts/uncertainty.py):
+Reference run in [`bagfiles/total_bag.bag`](bagfiles), evaluated against the Gazebo ground truth with [`plots/scripts/uncertainty.py`](plots/scripts/uncertainty.py):
 
-| Robot | RMSE x [m] | RMSE y [m] | RMSE θ [deg] | Mean predicted σ x, y [m] |
+| Robot | RMSE x [m] | RMSE y [m] | RMSE θ [deg] | Predicted σ x, y [m] |
 |---|---|---|---|---|
 | 0 | 0.016 | 0.014 | 4.9 | 0.017, 0.019 |
 | 1 | 0.015 | 0.009 | 1.2 | 0.022, 0.012 |
@@ -52,99 +31,55 @@ Run of 5 robots and 6 anchors recorded in [`bagfiles/total_bag.bag`](bagfiles), 
 | 3 | 0.013 | 0.013 | 2.4 | 0.015, 0.020 |
 | 4 | 0.017 | 0.014 | 5.2 | 0.021, 0.015 |
 
-All the robots reach the target. The cooperative estimate is **(0.965, 1.952, 0.825) m** against the true (1.00, 2.00, 0.80) m, an error of **6.4 cm**. The position errors are consistent with the covariance predicted by the filter, and the heading error stays at the value of the initial estimate instead of drifting.
+The target estimate is **(0.965, 1.952, 0.825) m** against the true (1.00, 2.00, 0.80) m, an error of 6.4 cm. The errors are consistent with the covariance of the filter.
 
 <p align="center">
   <img src="plots/multiple.png" width="49%" />
   <img src="plots/z_estimate.png" width="49%" />
 </p>
 
-## Running the simulation
+## Running
 
-The simulation opens Gazebo, the camera of a robot with the detected target and a live monitor of the estimates: map with true and estimated trajectories, covariance ellipses and the cooperative target estimate, plus the localization and target errors over time.
+With Docker, no ROS installation needed:
+
+```sh
+git clone -b ros1 https://github.com/msterlini/uwb-ekf-cooperative-localization.git
+cd uwb-ekf-cooperative-localization
+./run.sh            # Linux: Gazebo, camera of a robot and live monitor on the desktop, GPU detected automatically
+./run.sh web        # any OS: desktop in the browser at http://localhost:6080/vnc.html
+.\run.ps1           # Windows PowerShell, same as web
+```
 
 ![Live monitor](docs/live_monitor.png)
 
-It can run natively or in Docker, with the windows on the desktop or in the browser.
-
-### Locally with ROS Noetic (Ubuntu 20.04)
+Natively on Ubuntu 20.04 with ROS Noetic:
 
 ```sh
 mkdir -p ~/catkin_ws/src && cd ~/catkin_ws/src
-git clone https://github.com/msterlini/uwb-ekf-cooperative-localization.git dist_project
-cd ~/catkin_ws
-rosdep update --include-eol-distros
-rosdep install --from-paths src --ignore-src -y
-catkin_make
+git clone -b ros1 https://github.com/msterlini/uwb-ekf-cooperative-localization.git dist_project
+cd ~/catkin_ws && rosdep install --from-paths src --ignore-src -y && catkin_make
 source devel/setup.bash
 roslaunch dist_project init.launch
 ```
 
-### With Docker
-
-No ROS installation needed, only Docker:
+Headless run and analysis:
 
 ```sh
-git clone https://github.com/msterlini/uwb-ekf-cooperative-localization.git
-cd uwb-ekf-cooperative-localization
-./run.sh          # Linux (and WSL2): windows on the desktop, with the GPU of the host
-./run.sh web      # desktop in the browser at http://localhost:6080/vnc.html
-```
-
-| OS | Command | Result |
-|---|---|---|
-| Linux | `./run.sh` | windows on the desktop, GPU detected automatically |
-| macOS (Docker Desktop) | `./run.sh` | desktop in the browser at http://localhost:6080/vnc.html |
-| Windows (Docker Desktop) | `.\run.ps1` from PowerShell, or `./run.sh` inside WSL2 | desktop in the browser, or windows through WSLg |
-
-The ROS images exist only for x86-64: on Apple Silicon Docker Desktop runs them through emulation, which works but is slower.
-
-`run.sh` detects the GPU and adds the matching override in [`docker/`](docker): NVIDIA (requires [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)) or AMD/Intel through Mesa; without a GPU Gazebo renders on the CPU, which works but is slower. `GPU=nvidia|dri|none ./run.sh` forces a choice. The browser and headless modes run on a virtual display and always render on the CPU.
-
-### Headless runs and results
-
-Record a bag in `bagfiles/` without any window, then compute the error statistics and the figures in `plots/`:
-
-```sh
-# Docker
-DURATION=300 BAG_NAME=my_run ./run.sh headless
-docker compose run --rm -v ./plots:/catkin_ws/src/dist_project/plots headless \
-    python3 src/dist_project/plots/scripts/uncertainty.py src/dist_project/bagfiles/my_run.bag --save
-
-# Native
-roslaunch dist_project init.launch gui:=false record:=true bag_name:=my_run
+DURATION=300 BAG_NAME=my_run ./run.sh headless     # or: roslaunch dist_project init.launch gui:=false record:=true bag_name:=my_run
+pip install rosbags matplotlib
 python3 plots/scripts/uncertainty.py bagfiles/my_run.bag --save
 ```
 
-Launch arguments of `init.launch`: `gui` (default `true`), `monitor` (live monitor, default `true`), `record`, `bag_name`, `overview_camera` (fixed camera above the room on `/overview_camera/image_raw`). All the parameters of the filter and of the sensors are in [`launch/init.launch`](launch/init.launch).
+Launch arguments of `init.launch`: `gui`, `monitor`, `record`, `bag_name`, `overview_camera`; it also holds all the filter and sensor parameters. Robots, anchors and target are read from the csv files of [`coordinates/`](coordinates). The estimation code is plain NumPy and is tested without ROS with `pytest`.
 
-### Changing the scenario
-
-The number and the positions of robots, anchors and target are read from the csv files in [`coordinates/`](coordinates): adding a line adds a robot or an anchor, no code changes needed.
-
-### Tests
-
-The estimation code is plain Python/NumPy in [`src/dist_project`](src/dist_project) and is tested without ROS:
-
-```sh
-pip install numpy pytest
-pytest
-```
-
-## Repository structure
+## Structure
 
 | Folder | Content |
 |---|---|
 | `scripts/` | ROS nodes, see [scripts/README.md](scripts/README.md) |
-| `src/dist_project/` | EKF, bearing-only triangulation and anchor lookup |
-| `launch/` | `init.launch` (whole simulation), `start_nodes.launch` (nodes of one robot) |
-| `coordinates/` | spawn positions of robots, anchors and target |
-| `urdf/`, `mesh/`, `models/`, `worlds/` | robot description, room, target and Gazebo world |
-| `msg/` | custom messages `uwb_data` and `robot_data` |
-| `bagfiles/` | recorded simulations |
-| `plots/` | scripts and figures of the results |
-| `test/` | unit tests |
-
-## Using it as a base
-
-The project was built to be a starting point for other course projects: the scene is generated from the csv files, every robot runs in its own namespace and the estimation code is separated from ROS. If you use it, feel free to open an issue to let me know.
+| `src/dist_project/` | EKF, triangulation, anchor lookup |
+| `launch/`, `coordinates/` | launch files and parameters, scenario |
+| `urdf/`, `mesh/`, `models/`, `worlds/` | robot, room and Gazebo world |
+| `msg/` | messages `uwb_data` and `robot_data` |
+| `bagfiles/`, `plots/` | recorded runs, analysis scripts and figures |
+| `docker/`, `test/` | Docker setup, unit tests |

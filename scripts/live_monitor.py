@@ -14,11 +14,11 @@ matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.animation import FuncAnimation  # noqa: E402
 
-# The covariance ellipses of the robots are of a few centimeters, I scale them to make them visible
+# Scale of the covariance ellipses, otherwise too small to see
 ELLIPSE_SCALE = 10
 # Height of the center of the yellow sphere once the target lies on the floor
 TARGET_Z = 0.8
-# Estimates are shown only once the filter converged, before the robot doesn't know where it is
+# Estimates shown only once the filter converged
 CONVERGED_STD = 0.2
 COLORS = ["tab:orange", "tab:green", "tab:pink", "tab:blue", "tab:purple", "tab:brown", "tab:olive", "tab:cyan"]
 

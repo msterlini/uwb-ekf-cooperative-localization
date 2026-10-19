@@ -68,8 +68,7 @@ class KalmanEstimator:
             dt = self.default_dt
         self.last_stamp = stamp
 
-        # Velocity and rotation rate extraction from the increments of the odometry pose. The twist is an
-        # instantaneous value, when the robot vibrates (e.g. stuck against a wall) integrating it makes theta drift
+        # Velocity and rotation rate from the increments of the odometry pose, the twist makes theta drift
         pos = odom_data.pose.pose.position
         q = odom_data.pose.pose.orientation
         odom_yaw = tf.transformations.euler_from_quaternion([q.x, q.y, q.z, q.w])[2]
@@ -86,8 +85,7 @@ class KalmanEstimator:
         if self.heading_ready:
             self.ekf.predict(delta_vel, delta_w, dt)
         else:
-            # Until theta is estimated I don't know in which direction the robot is moving,
-            # so the movement only increases the uncertainty on x and y
+            # Until theta is estimated the movement only increases the uncertainty on x and y
             self.ekf.predict(0.0, delta_w, dt)
             self.ekf.sigma[:2, :2] += np.eye(2) * (delta_vel * dt)**2
 
@@ -115,7 +113,7 @@ class KalmanEstimator:
                 dy = self.ekf.mu[1] - self.first_y
                 self.ekf.mu[2] = wrap_angle(np.arctan2(dy, dx))
 
-                # Uncertainty on theta given by the uncertainty on the position over the travelled distance
+                # Uncertainty on theta from the position uncertainty over the travelled distance
                 pos_std = np.sqrt(self.ekf.sigma[0, 0] + self.ekf.sigma[1, 1])
                 self.ekf.sigma[2, :] = 0
                 self.ekf.sigma[:, 2] = 0
