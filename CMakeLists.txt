@@ -11,8 +11,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/RobotData.msg"
 )
 
-# Pure-Python estimation modules in src/dist_project, installed in the same Python package generated for the
-# messages (dist_project.msg), so that both dist_project.ekf and dist_project.msg can be imported
+# Estimation modules, installed in the Python package of the messages
 install(DIRECTORY src/${PROJECT_NAME}/
   DESTINATION ${PYTHON_INSTALL_DIR}/${PROJECT_NAME}
   PATTERN "__init__.py" EXCLUDE

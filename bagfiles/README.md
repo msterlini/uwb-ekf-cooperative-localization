@@ -18,7 +18,7 @@ rosbag record /robot0/localization_data_topic /robot0/ground_truth/state -O few_
 ```sh
 rosbag record -e "(.*)localization_data_topic(.*)" "(.*)ground_truth/state(.*)" "(.*)target_estimate(.*)" -O total_bag.bag
 ```
-`few_tags.bag` and `more_tags.bag` are the ROS 1 bags of the report. `total_bag/` is a run of this ROS 2 version, in MCAP format compressed with zstd. All of them can be read with [rosbags](https://gitlab.com/ternaris/rosbags), as the scripts in `plots/scripts` do. A new bag can be recorded with:
+`few_tags.bag` and `more_tags.bag` are the ROS 1 bags of the report, `total_bag/` a run of the current version in MCAP format. The scripts in `plots/scripts` read both with [rosbags](https://gitlab.com/ternaris/rosbags). A new bag:
 
 ```sh
 ros2 launch dist_project sim.launch.py record:=true bag_name:=my_run

@@ -2,7 +2,7 @@
 
 This folder contains the ROS 2 launch file of the simulation, written in Python.
 
-- `sim.launch.py`: starts Gazebo Harmonic with `worlds/room.world`, spawns the room, the UWB anchors, the target and the robots read from the csv files in `coordinates/`, publishes the static transforms of the anchors, bridges the Gazebo topics (commands, odometry, ground truth, cameras, clock) to ROS and starts the nodes of every robot in its own namespace, plus the camera viewer and the live monitor.
+- `sim.launch.py`: starts Gazebo, spawns room, anchors, target and the robots of `coordinates/`, bridges the Gazebo topics to ROS and starts the nodes of every robot in its own namespace and the live monitor.
 
 To run it:
 
