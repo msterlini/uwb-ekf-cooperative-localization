@@ -98,7 +98,7 @@ class MotionPlanner(Node):
         # Heading error towards the center of the room, in [-pi, pi]
         error = (np.arctan2(to_point[1], to_point[0]) - self.pose[2] + np.pi) % (2 * np.pi) - np.pi
 
-        # As for the approach the robot moves forward only if it is already pointing in the right direction
+        # As for the approach the robot moves forward only if pointing in the right direction
         if abs(error) > 0.2:
             self.publish_velocity(0, np.clip(PID_KP * error, -TURN_SPEED, TURN_SPEED))
         else:
@@ -166,8 +166,7 @@ class MotionPlanner(Node):
                 # If the robot is still searching for a target it's only commanded to turn on the spot
                 self.publish_velocity(0, TURN_SPEED)
         elif self.current_state == "APPROACH":
-            # The gazebo plugin keeps applying the last command, if the target is lost the robot must stop and search
-            # again instead of going straight until it hits a wall
+            # If the target is lost the robot stops and searches again
             if self.time() - self.last_blob_time > TARGET_LOST_TIME:
                 self.publish_velocity(0, 0)
                 self.start_search()

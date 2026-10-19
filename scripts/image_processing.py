@@ -31,7 +31,7 @@ class BlobDetector(Node):
         # Variable holding the point
         self.blob_point = Point()
 
-        # The image with the detected target is only displayed, so it is published at a lower rate than the camera
+        # The image with the detected target is only displayed, at a lower rate
         self.display_period = 1.0 / self.declare_parameter("image_display_rate", 10.0).value
         self.last_display = -1e9
 
@@ -224,8 +224,7 @@ class BlobDetector(Node):
     def set_blob_params(self, blob_params):
         self._blob_params = blob_params
 
-    # Image shown in the Gazebo panels: in RGB, which the panels can show, and at half size, which is enough for the
-    # panels and lighter to send, with a thicker circle on the target and the name of the robot in the corner
+    # Image for the Gazebo panels, in RGB and at half size
     def publish_display(self, cv_image, keypoints, rows, cols, header):
         display = cv2.resize(cv_image, (cols // 2, rows // 2))
         for keyPoint in keypoints:
@@ -252,7 +251,7 @@ class BlobDetector(Node):
             # Detect blobs
             keypoints, mask = self.blob_detect(cv_image, self._threshold[0], self._threshold[1], self._blur,
                                                blob_params=self._blob_params, search_window=self.detection_window)
-            # Image for the Gazebo panels at the display rate, with search window and blobs drawn
+            # Search window and blobs drawn only on the displayed frames
             stamp = data.header.stamp.sec + data.header.stamp.nanosec * 1e-9
             if stamp - self.last_display >= self.display_period:
                 self.last_display = stamp

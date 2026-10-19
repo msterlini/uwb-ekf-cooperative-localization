@@ -31,7 +31,7 @@ def spawn(name, x=0.0, y=0.0, z=0.0, file=None, string=None):
 
 
 def spawn_robots(context, xacro_file, robot_names, robots):
-    # The robot description depends on the camera_rate argument, known only when the launch is running
+    # The robot description depends on the camera_rate argument
     camera_rate = context.launch_configurations['camera_rate']
     return [spawn(name, x, y, 0.1, string=xacro.process_file(
                 xacro_file, mappings={'robot_name': name, 'camera_rate': camera_rate}).toxml())
@@ -70,7 +70,7 @@ def generate_launch_description():
                               description='Frame rate of the robot cameras, lower it (e.g. 5) without a GPU'),
     ]
 
-    # Gazebo finds the meshes of the package (package://dist_project/...) in the share directory
+    # Path of the meshes for Gazebo
     resources = SetEnvironmentVariable(
         'GZ_SIM_RESOURCE_PATH', os.path.dirname(share) + os.pathsep + os.environ.get('GZ_SIM_RESOURCE_PATH', ''))
 
@@ -111,13 +111,12 @@ def generate_launch_description():
                    '/{}/ground_truth/state@nav_msgs/msg/Odometry[gz.msgs.Odometry'.format(name),
                    '/{}/camera/image_raw@sensor_msgs/msg/Image[gz.msgs.Image'.format(name)]
     bridge = Node(package='ros_gz_bridge', executable='parameter_bridge', arguments=topics, output='log')
-    # Gazebo publishes the clock at every physics step (1 kHz): I give the nodes a 100 Hz clock,
-    # otherwise every node spends its time reading the clock and the simulation slows down
+    # Clock throttled from 1 kHz to 100 Hz, otherwise it slows down every node
     clock_bridge = Node(package='ros_gz_bridge', executable='parameter_bridge', name='clock_bridge', output='log',
                         arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'], remappings=[('/clock', '/gz_clock')])
     clock_throttle = Node(package='topic_tools', executable='throttle', name='clock_throttle', output='log',
                           arguments=['messages', '/gz_clock', '100', '/clock'])
-    # Images with the detected target, shown in the panels of the Gazebo window
+    # Images with the detected target for the Gazebo panels
     blob_bridge = Node(package='ros_gz_bridge', executable='parameter_bridge', name='blob_bridge', output='log',
                        condition=IfCondition(PythonExpression(["'", gui, "' == 'true' and '", gazebo_gui, "' == 'true'"])),
                        arguments=['/{}/target/image_blob@sensor_msgs/msg/Image]gz.msgs.Image'.format(name)
@@ -146,7 +145,7 @@ def generate_launch_description():
         cmd=['ros2', 'bag', 'record', '--use-sim-time', '-s', 'mcap', '--storage-preset-profile', 'zstd_fast', '-o',
              PathJoinSubstitution([LaunchConfiguration('bag_dir'), LaunchConfiguration('bag_name')]),
              '--regex', '.*/(localization_data_topic|ground_truth/state|target_estimate)'],
-        # The recorder needs time to compress and close the bag when the simulation is stopped
+        # Time to close the bag on shutdown
         condition=IfCondition(record), output='log', sigterm_timeout='60', sigkill_timeout='10')
 
     return LaunchDescription(arguments + [

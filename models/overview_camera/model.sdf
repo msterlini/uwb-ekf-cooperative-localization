@@ -3,7 +3,7 @@
   <model name="overview_camera">
     <static>true</static>
     <link name="link">
-      <!-- Pose in the link, so that it doesn't depend on the pose given when the model is spawned -->
+      <!-- Pose in the link, the spawn overrides the model pose -->
       <pose>0.3 -6.2 10 0 1.0 1.5708</pose>
       <sensor name="overview_camera" type="camera">
         <always_on>true</always_on>

@@ -90,8 +90,7 @@ class UnicycleEKF:
         # I define the Kalman gain as the matrix W
         W = (self.sigma @ H.T) @ S_inv
 
-        # When the robot is still the distances can't tell anything about theta, without this the noise of the
-        # measurements would reach theta through the correlation with x and y and make it drift
+        # When the robot is still the distances say nothing about theta, I don't update it
         if not update_heading:
             W[2, :] = 0
 

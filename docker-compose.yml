@@ -1,8 +1,4 @@
-# Use ./run.sh, which picks the GPU override in docker/ (see the README).
-# CAMERA_RATE sets the frame rate of the robot cameras (default 10 Hz).
-# Desktop in the browser (any OS):   docker compose up web   ->  http://localhost:6080/vnc.html
-#   everything renders on the CPU, so it shows only the live monitor with cameras at 5 Hz (GAZEBO_GUI=true adds Gazebo)
-# Headless run that records a bag:   DURATION=300 BAG_NAME=my_run docker compose run --rm headless
+# Started by run.sh, see the README
 services:
   web:
     build: .
@@ -11,8 +7,7 @@ services:
     ports:
       - "6080:6080"
     environment:
-      # Each mode is isolated: ROS and Gazebo discover only the processes of the same container,
-      # so two simulations started together don't mix their topics
+      # Discovery limited to the container, two simulations don't mix
       - ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
       - GZ_IP=127.0.0.1
       - GZ_PARTITION=web

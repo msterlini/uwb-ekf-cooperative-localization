@@ -18,11 +18,11 @@ matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.animation import FuncAnimation  # noqa: E402
 
-# The covariance ellipses of the robots are of a few centimeters, I scale them to make them visible
+# Scale of the covariance ellipses, otherwise too small to see
 ELLIPSE_SCALE = 10
 # Height of the center of the yellow sphere once the target lies on the floor
 TARGET_Z = 0.8
-# Estimates are shown only once the filter converged, before the robot doesn't know where it is
+# Estimates shown only once the filter converged
 CONVERGED_STD = 0.2
 COLORS = ["tab:orange", "tab:green", "tab:pink", "tab:blue", "tab:purple", "tab:brown", "tab:olive", "tab:cyan"]
 
@@ -214,11 +214,11 @@ if __name__ == "__main__":
     monitor = LiveMonitor()
     monitor.setup()
 
-    # The callbacks are executed in a background thread, matplotlib needs the main one
+    # Callbacks in a background thread, matplotlib in the main one
     executor = MultiThreadedExecutor()
     executor.add_node(monitor)
     threading.Thread(target=executor.spin, daemon=True).start()
 
-    # The figure is refreshed a few times per second, the data arrive in the callbacks
+    # Figure refreshed a few times per second
     animation = FuncAnimation(monitor.fig, monitor.update, interval=300)
     plt.show()
