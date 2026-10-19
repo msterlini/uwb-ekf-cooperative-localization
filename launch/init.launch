@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <launch>
 
-  <!-- gui:=false STARTS GAZEBO WITHOUT GRAPHICAL INTERFACES, record:=true SAVES A BAG FILE IN bagfiles/ -->
+  <!-- gui:=false WITHOUT GRAPHICAL INTERFACES, record:=true SAVES A BAG IN bagfiles/ -->
   <arg name="gui" default="true" />
   <!-- monitor:=false DOESN'T OPEN THE LIVE VIEW OF MAP, ESTIMATES AND ERRORS -->
   <arg name="monitor" default="true" />
   <arg name="record" default="false" />
   <arg name="bag_name" default="run" />
-  <!-- overview_camera:=true ADDS A FIXED CAMERA ABOVE THE ROOM PUBLISHING ON /overview_camera/image_raw -->
+  <!-- overview_camera:=true ADDS A FIXED CAMERA ABOVE THE ROOM -->
   <arg name="overview_camera" default="false" />
 
   <!-- PARAMETER SECTION -->
@@ -42,7 +42,7 @@
 
   <!-- MOTION PLANNER NODE PARAMETERS -->
   <param name="motion_planner_rate" type="int" value="10" />
-  <!-- POINT TOWARDS WHICH A ROBOT MOVES IF IT DOESN'T SEE THE TARGET AFTER A FULL TURN (CENTER OF THE ROOM) -->
+  <!-- POINT TOWARDS WHICH A ROBOT EXPLORES IF IT DOESN'T SEE THE TARGET -->
   <param name="explore_point_x" type="double" value="0.0" />
   <param name="explore_point_y" type="double" value="0.0" />
 

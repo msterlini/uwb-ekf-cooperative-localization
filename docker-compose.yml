@@ -1,6 +1,4 @@
-# Use ./run.sh, which picks the GPU override in docker/ (see the README).
-# Desktop in the browser (any OS):   docker compose up web   ->  http://localhost:6080/vnc.html
-# Headless run that records a bag:   DURATION=300 BAG_NAME=my_run docker compose run --rm headless
+# Started by run.sh, see the README
 services:
   web:
     build: .

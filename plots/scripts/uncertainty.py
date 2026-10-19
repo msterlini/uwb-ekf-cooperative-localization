@@ -7,7 +7,7 @@ import numpy as np
 import rosbag
 import tf.transformations
 
-# Without a display the figures are saved in the plots folder instead of being shown
+# Without a display the figures are saved
 SAVE = '--save' in sys.argv or not os.environ.get('DISPLAY')
 if SAVE:
     matplotlib.use('Agg')
