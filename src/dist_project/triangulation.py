@@ -6,7 +6,7 @@ VERTICAL_TILT = 67 * np.pi / 180
 
 def intersect_bearings(robots, iterations=3):
     # Each row of robots is [x, y, theta, sigma_x, sigma_y, sigma_theta] of a robot pointing at the target.
-    # Each robot defines a line, I write it as -sin(theta)*x + cos(theta)*y = c so that vertical lines are not a problem
+    # Each robot defines a line -sin(theta)*x + cos(theta)*y = c
     robots = np.atleast_2d(np.asarray(robots, dtype=float))
 
     # At least 2 lines are needed to find an intersection
@@ -24,8 +24,7 @@ def intersect_bearings(robots, iterations=3):
     if np.linalg.cond(A) > 1e6:
         return None, None
 
-    # The uncertainty of each line depends on the distance from the target, so I start with equal weights
-    # and I recompute them a few times with the last estimate
+    # The weights depend on the distance from the target, I start equal and iterate
     weights = np.ones(len(robots))
     for _ in range(iterations + 1):
         C_inv = np.diag(weights)

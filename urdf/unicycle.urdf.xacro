@@ -357,7 +357,6 @@
         <update_rate>$(arg camera_rate)</update_rate>
         <camera>
             <horizontal_fov>2</horizontal_fov>
-            <!-- The camera doesn't see the field of view drawn below -->
             <visibility_mask>1</visibility_mask>
             <image>
                 <format>R8G8B8</format>
@@ -377,7 +376,7 @@
     </sensor>
 </gazebo>
 
-<!-- Field of view of the camera, drawn in Gazebo as Gazebo Classic did with visualize -->
+<!-- Field of view of the camera, visible only in the Gazebo view -->
 <link name="camera_fov_link">
     <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
@@ -394,7 +393,6 @@
 </joint>
 
 <gazebo reference="camera_fov_link">
-    <!-- Only the Gazebo view shows it, the cameras have visibility_mask 1 -->
     <visual>
         <cast_shadows>false</cast_shadows>
         <transparency>0.8</transparency>

@@ -120,7 +120,7 @@ The script interacts with the following topics:
 # `live_monitor.py`
 
 ## Key Features
-Live view of the simulation, opened by `init.launch`: map of the room with the UWB anchors, the true and estimated trajectories of every robot with the covariance ellipse of the estimate, the cooperative target estimate with its uncertainty, and the localization and target errors over time. Estimates are shown once the filter converged.
+Live view of the simulation, opened by `sim.launch.py`: map of the room with the UWB anchors, the true and estimated trajectories of every robot with the covariance ellipse of the estimate, the cooperative target estimate with its uncertainty, and the localization and target errors over time. Estimates are shown once the filter converged.
 
 ## Topics
 - **Subscription:**

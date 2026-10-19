@@ -22,7 +22,6 @@ if __name__ == "__main__":
 
     # Data extraction
     # Packing of data iterating all messages stored
-    # rosbags reads both ROS 1 (.bag) and ROS 2 (mcap) bags
     with AnyReader([Path(bagfile)]) as reader:
         for connection, t, rawdata in reader.messages():
             msg = reader.deserialize(rawdata, connection.msgtype)

@@ -8,7 +8,7 @@ import matplotlib
 import numpy as np
 from rosbags.highlevel import AnyReader
 
-# Without a display the figures are saved in the plots folder instead of being shown
+# Without a display the figures are saved
 SAVE = '--save' in sys.argv or not os.environ.get('DISPLAY')
 if SAVE:
     matplotlib.use('Agg')
@@ -18,7 +18,7 @@ PACKAGE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..
 
 # Height of the center of the yellow sphere once the target lies on the floor
 TARGET_Z = 0.8
-# Position std [m] below which the filter is considered converged, as in the live monitor
+# Position std [m] below which the filter is converged
 CONVERGED_STD = 0.2
 
 
@@ -33,8 +33,7 @@ def yaw(q):
 
 
 def read_bag(path):
-    # Messages of every topic as (time [s], message); rosbags reads both ROS 1 (.bag) and ROS 2 (mcap) bags
-    # The time is the one of the header, so the simulation time even if the bag was recorded with the wall clock
+    # Messages of every topic as (header time [s], message), from ROS 1 or ROS 2 bags
     messages = defaultdict(list)
     with AnyReader([Path(path)]) as reader:
         for connection, timestamp, rawdata in reader.messages():
@@ -90,7 +89,7 @@ if __name__ == "__main__":
         for t, msg in messages[id + "/localization_data_topic"]:
             pose = msg.pose.pose
             cov = np.reshape(msg.pose.covariance, (6, 6))
-            # I skip the estimates before the first convergence, when the filter is still at its initial guess
+            # I skip the estimates before the first convergence
             if not tmp1 and np.sqrt(cov[0, 0] + cov[1, 1]) > CONVERGED_STD:
                 continue
             tmp1.append([t, pose.position.x, pose.position.y, yaw(pose.orientation)])
